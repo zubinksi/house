@@ -245,10 +245,13 @@ function draw() {
  * so text never sits in real shadow. By night the blinds' light is screened on
  * faintly. It is blurred more than the wall, as light on a sheet is. */
 const PAPER = {
-  sun: { blend: 'multiply', shade: '#ddd3c3', gain: 2, blur: 6, opacity: 0.6 },
+  // by day: faint, and moving at about a third of the wall's pace, so what
+  // crosses the numbers drifts rather than sways
+  sun: { blend: 'multiply', shade: '#e4dccf', gain: 2, blur: 7, opacity: 0.35, speed: 0.35 },
   moon: { blend: 'screen', blur: 10, opacity: 0.65 },
 };
 let paper = null, pctx = null, slab = null, paperOn = true, shown = false, lastClip = '';
+let slow = null, sctx = null; // the slab's own, slower frame of the scene
 
 function clipToSlab() {
   if (!paper || !slab) return;
@@ -275,6 +278,22 @@ function drawPaper() {
     paper.width = W;
     paper.height = H;
   }
+  // a slower slab draws its own frame of the scene on its own clock
+  let source = canvas;
+  if (p.speed && p.speed !== 1) {
+    if (!slow) {
+      slow = document.createElement('canvas');
+      sctx = slow.getContext('2d');
+    }
+    if (slow.width !== W || slow.height !== H) {
+      slow.width = W;
+      slow.height = H;
+    }
+    sctx.setTransform(1, 0, 0, 1, 0, 0);
+    sctx.globalAlpha = 1;
+    cur.frame(sctx, W, H, t * p.speed);
+    source = slow;
+  }
   pctx.setTransform(1, 0, 0, 1, 0, 0);
   pctx.globalAlpha = 1;
   pctx.globalCompositeOperation = 'source-over';
@@ -282,11 +301,11 @@ function drawPaper() {
     pctx.fillStyle = p.shade;
     pctx.fillRect(0, 0, W, H);
     pctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < p.gain; i++) pctx.drawImage(canvas, 0, 0);
+    for (let i = 0; i < p.gain; i++) pctx.drawImage(source, 0, 0);
     pctx.globalCompositeOperation = 'source-over';
   } else {
     pctx.clearRect(0, 0, W, H);
-    pctx.drawImage(canvas, 0, 0);
+    pctx.drawImage(source, 0, 0);
   }
   paper.style.mixBlendMode = p.blend;
   paper.style.filter = `blur(${p.blur}px)`;
