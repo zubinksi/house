@@ -2,24 +2,14 @@
  * light.js — the light falling on the wall.
  *
  * Each mode draws one canvas: the patch of light a window throws onto the wall,
- * and whatever stands between the light and the window (leaves, blinds). The
+ * and the blind it comes through. The
  * canvas is drawn at low resolution, blurred with CSS, and blended over the
  * wall, so it reads as ambient light rather than an image.
  *
- *   sun  — screen:   warm window light, swaying leaf shadows, passing clouds
- *   moon — screen:   cool light through blinds, a curtain edge, cloud shadows
+ *   sun  — warm daylight through a blind, a curtain edge, cloud shadows
+ *   moon — the same blind in cool, faint moonlight
  */
 const TAU = Math.PI * 2;
-
-// Small seeded PRNG so the leaves are the same on every visit.
-function rng(seed) {
-  return function () {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 // Smooth 1D value noise in [0, 1].
 function noise(x, seed) {
@@ -54,168 +44,75 @@ function windowPath(ctx, W, H, w) {
   }
 }
 
-/* ── Sunlight ─────────────────────────────────────────────────────────── */
-const sun = {
-  // screen adds the sun to the grey wall: black leaves it as it is, the warm
-  // colour brightens the patch the window throws
-  blend: 'screen',
-  blur: 3,
-  scale: 0.35,
-  // the sway, clouds and flutter run at this fraction of real time
-  speed: 0.6,
-  shade: '#000000',
-  light: '#8f7b59',
-  // starts below the masthead, so the light never washes out its white text
-  win: { x: 0.36, y: 0.1, w: 0.6, h: 1.0, skew: -0.32, cols: 2, rows: 3, m: 0.022 },
+/* ── Light through a blind: one scene, lit by the sun or the moon ─────────
+ * The patch a window throws on the wall, through the slats of a blind, with a
+ * curtain edge stirring in a draft and cloud shadows sliding past. Screened
+ * onto the wall: black leaves it as it is, the light brightens it. By day the
+ * light is warm and stronger; by night it's cool and faint. */
+function blinds({ blur, glow, light, strength }) {
+  return {
+    blend: 'screen',
+    blur,
+    scale: 0.25,
+    // starts below the masthead, so the light never washes out its white text
+    win: { x: 0.1, y: 0.1, w: 0.5, h: 0.84, skew: 0.28, cols: 2, rows: 2, m: 0.02 },
 
-  build(W, H) {
-    const R = rng(11);
-    const U = H;
-    this.branches = [];
-    for (let i = 0; i < 7; i++) {
-      const fromRight = i % 3 === 2;
-      const b = {
-        x: fromRight ? W * 1.02 : W * (0.32 + R() * 0.72),
-        y: fromRight ? H * (0.05 + R() * 0.45) : -U * 0.05,
-        a: fromRight ? Math.PI * (0.78 + R() * 0.12) : Math.PI * (0.5 + (R() - 0.5) * 0.4),
-        p: R() * TAU,
-        sway: 0.6 + R() * 0.7,
-        width: U * (0.004 + R() * 0.003),
-        segs: [],
-      };
-      const ns = 12 + Math.floor(R() * 10);
-      const L = U * (0.028 + R() * 0.018);
-      const bend = (R() - 0.5) * 0.05;
-      for (let s = 0; s < ns; s++) {
-        const seg = { L, bend: bend + (R() - 0.5) * 0.08, leaves: [] };
-        const tip = s === ns - 1;
-        const nl = tip ? 3 : s < 2 ? 0 : R() < 0.85 ? (R() < 0.5 ? 1 : 2) : 0;
-        for (let l = 0; l < nl; l++) {
-          seg.leaves.push({
-            side: tip ? l - 1 : (l % 2 ? -1 : 1) * (R() < 0.5 ? 1 : -1),
-            off: tip ? 0.35 : 0.45 + R() * 0.6,
-            len: U * (0.045 + R() * 0.05),
-            wr: 0.16 + R() * 0.1,
-            p: R() * TAU,
-            f: 1.5 + R() * 2.5,
-            amp: 0.08 + R() * 0.16,
-          });
-        }
-        b.segs.push(seg);
-      }
-      this.branches.push(b);
-    }
-  },
-
-  frame(ctx, W, H, t) {
-    ctx.fillStyle = this.shade;
-    ctx.fillRect(0, 0, W, H);
-
-    // Clouds drift across the sun now and then.
-    const sunny = Math.min(1, 0.55 + 0.6 * noise(t * 0.05, 3));
-    const wind = (noise(t * 0.35, 1) - 0.5) * 1.6 + Math.sin(t * 0.9) * 0.15;
-
-    ctx.save();
-    windowPath(ctx, W, H, this.win);
-    ctx.clip();
-    ctx.globalAlpha = 0.3 + 0.7 * sunny;
-    ctx.fillStyle = this.light;
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = this.shade;
-    ctx.strokeStyle = this.shade;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const leaves = [];
-    for (const b of this.branches) {
-      let x = b.x, y = b.y;
-      let a = b.a + wind * 0.05 * b.sway + Math.sin(t * 0.7 + b.p) * 0.012;
-      ctx.lineWidth = b.width;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      const n = b.segs.length;
-      b.segs.forEach((s, i) => {
-        a += s.bend + wind * 0.012 * (i / n) * b.sway;
-        x += Math.cos(a) * s.L;
-        y += Math.sin(a) * s.L;
-        ctx.lineTo(x, y);
-        for (const l of s.leaves) {
-          const ang = a + l.side * l.off + Math.sin(t * l.f + l.p) * l.amp * (0.5 + Math.abs(wind)) + wind * 0.25;
-          leaves.push(x, y, ang, l.len, l.wr);
-        }
-      });
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    for (let i = 0; i < leaves.length; i += 5) {
-      const x = leaves[i], y = leaves[i + 1], ang = leaves[i + 2], len = leaves[i + 3], wr = leaves[i + 4];
-      const rx = len * 0.5, ry = len * wr * 0.5;
-      const cx = x + Math.cos(ang) * rx, cy = y + Math.sin(ang) * rx;
-      ctx.moveTo(cx + Math.cos(ang) * rx, cy + Math.sin(ang) * rx);
-      ctx.ellipse(cx, cy, rx, ry, ang, 0, TAU);
-    }
-    ctx.fill();
-    ctx.restore();
-  },
-};
-
-/* ── Moonlight ────────────────────────────────────────────────────────── */
-const moon = {
-  blend: 'screen',
-  blur: 9,
-  scale: 0.25,
-  win: { x: 0.1, y: 0.06, w: 0.5, h: 0.86, skew: 0.28, cols: 2, rows: 2, m: 0.02 },
-
-  frame(ctx, W, H, t) {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, W, H);
-
-    // Faint glow of the night sky filling the room.
-    const g = ctx.createRadialGradient(W * 0.78, 0, 0, W * 0.78, 0, H * 1.2);
-    g.addColorStop(0, 'rgba(70, 92, 135, 0.18)');
-    g.addColorStop(1, 'rgba(70, 92, 135, 0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    const clear = 0.5 + 0.5 * noise(t * 0.04, 7);
-    ctx.save();
-    windowPath(ctx, W, H, this.win);
-    ctx.clip();
-
-    // Light through the slats of a blind.
-    const slat = H * 0.034, gap = H * 0.012;
-    const drift = Math.sin(t * 0.3) * H * 0.002;
-    ctx.fillStyle = `rgba(150, 176, 222, ${0.36 * clear})`;
-    for (let y = -slat + drift; y < H; y += slat + gap) ctx.fillRect(0, y, W, slat);
-
-    // Cloud shadows sliding past.
-    for (let i = 0; i < 3; i++) {
-      const span = W * 1.8;
-      const cx = ((t * 0.012 * W * (1 + i * 0.4) + i * W * 0.6) % span) - W * 0.4;
-      const cy = H * (0.25 + 0.25 * i);
-      const r = H * (0.35 + 0.1 * i);
-      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      cg.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
-      cg.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = cg;
+    frame(ctx, W, H, t) {
+      ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, W, H);
-    }
-    ctx.restore();
 
-    // A curtain edge, moving slightly in a draft.
-    const base = W * (this.win.x + 0.07);
-    const e1 = base + Math.sin(t * 0.45) * W * 0.012;
-    const e2 = base + W * 0.05 + Math.sin(t * 0.45 + 0.8) * W * 0.02 + Math.sin(t * 1.1) * W * 0.004;
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(e1, 0);
-    ctx.bezierCurveTo(e1 + W * 0.01, H * 0.35, e2 - W * 0.02, H * 0.65, e2, H);
-    ctx.lineTo(0, H);
-    ctx.fill();
-  },
-};
+      // the sky's glow filling the room
+      const g = ctx.createRadialGradient(W * 0.78, 0, 0, W * 0.78, 0, H * 1.2);
+      g.addColorStop(0, `rgba(${glow}, 0.18)`);
+      g.addColorStop(1, `rgba(${glow}, 0)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      const clear = 0.5 + 0.5 * noise(t * 0.04, 7);
+      ctx.save();
+      windowPath(ctx, W, H, this.win);
+      ctx.clip();
+
+      // light through the slats of the blind
+      const slat = H * 0.034, gap = H * 0.012;
+      const drift = Math.sin(t * 0.3) * H * 0.002;
+      ctx.fillStyle = `rgba(${light}, ${strength * clear})`;
+      for (let y = -slat + drift; y < H; y += slat + gap) ctx.fillRect(0, y, W, slat);
+
+      // cloud shadows sliding past
+      for (let i = 0; i < 3; i++) {
+        const span = W * 1.8;
+        const cx = ((t * 0.012 * W * (1 + i * 0.4) + i * W * 0.6) % span) - W * 0.4;
+        const cy = H * (0.25 + 0.25 * i);
+        const r = H * (0.35 + 0.1 * i);
+        const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        cg.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+        cg.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = cg;
+        ctx.fillRect(0, 0, W, H);
+      }
+      ctx.restore();
+
+      // a curtain edge, moving slightly in a draft
+      const base = W * (this.win.x + 0.07);
+      const e1 = base + Math.sin(t * 0.45) * W * 0.012;
+      const e2 = base + W * 0.05 + Math.sin(t * 0.45 + 0.8) * W * 0.02 + Math.sin(t * 1.1) * W * 0.004;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(e1, 0);
+      ctx.bezierCurveTo(e1 + W * 0.01, H * 0.35, e2 - W * 0.02, H * 0.65, e2, H);
+      ctx.lineTo(0, H);
+      ctx.fill();
+    },
+  };
+}
+
+/* ── Sunlight: warm daylight through the blind ──────────────────────────── */
+const sun = blinds({ blur: 8, glow: '255, 226, 182', light: '255, 232, 196', strength: 0.5 });
+
+/* ── Moonlight: cool, faint moonlight through the same blind ──────────── */
+const moon = blinds({ blur: 9, glow: '70, 92, 135', light: '150, 176, 222', strength: 0.36 });
 
 /* ── Engine ───────────────────────────────────────────────────────────── */
 const scenes = { sun, moon };
@@ -247,9 +144,9 @@ function draw() {
  * so text never sits in real shadow. By night the blinds' light is screened on
  * faintly. It is blurred more than the wall, as light on a sheet is. */
 const PAPER = {
-  // by day: faint, and moving at about a third of the wall's pace, so what
-  // crosses the numbers drifts rather than sways
-  sun: { blend: 'multiply', shade: '#e4dccf', gain: 2, blur: 7, opacity: 0.35, speed: 0.35 },
+  // by day, the same blind's light on the paper: a light warm shade between
+  // the slats, warm white where the light falls
+  sun: { blend: 'multiply', shade: '#e2d9ca', gain: 2, blur: 10, opacity: 0.5 },
   moon: { blend: 'screen', blur: 10, opacity: 0.65 },
 };
 let paper = null, pctx = null, slab = null, paperOn = true, shown = false, lastClip = '';

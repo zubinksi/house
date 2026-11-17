@@ -2,9 +2,12 @@
 
 A home for Hyperliquid data.
 
-A slab on a wall. By day, warm sun falls through leaves across the home repo's
-grey wall, and the slab is cream paper. At night, moonlight comes through blinds
-onto a deep blue wall, and the slab turns a lighter blue with pale ink. As in the home repo, type is pressed into the slab and rules are cut into
+A slab on a wall. By day, warm sunlight falls through a blind across the home
+repo's grey wall, and the slab is cream paper. At night, moonlight comes through blinds
+onto a deep blue wall, and the slab turns a lighter blue with pale ink. Both are
+the same scene (the blind's slats, a curtain edge in a draft, cloud shadows
+passing) in two palettes, and a faint copy of it falls across the slab too
+('paper light', or L, to compare without). As in the home repo, type is pressed into the slab and rules are cut into
 it, lit from the upper left. Nothing is drawn to look like wood or brick;
 the feeling of home comes from light, sound, paper and time of day.
 
@@ -82,8 +85,8 @@ chart still works with Liveline's own gradient.
 
 | Control | Light on the wall | Sound |
 | --- | --- | --- |
-| switch / `S` | sunlight: a warm window, leaf shadows swaying, clouds passing | wind, leaves, birds |
-| switch / `M` | moonlight: cool light through blinds, a curtain edge in a draft | low wind, crickets |
+| switch / `S` | sunlight: warm daylight through a blind, a curtain edge, clouds passing | wind, leaves, birds |
+| switch / `M` | moonlight: the same blind in cool, faint moonlight | low wind, crickets |
 | sound / `A` | | on / off |
 
 `T` turns the switch. On a first visit the house follows the visitor's clock
