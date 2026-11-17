@@ -4,11 +4,12 @@
  * crypto and traditional (trade.xyz's HIP-3 markets), with live prices.
  * Address: the starred addresses.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Page } from './App';
 import { type Market, price, pct, tone, shortAddr, useMids } from './hl';
 import { FILTERS, type Filter, inFilter, ticker, assetName } from './catalog';
 import { toggleStar, useStars } from './stars';
+import { AddressForm } from './Address';
 
 export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClose }: {
   page: Page;
@@ -20,19 +21,73 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
   /** phones: back to the page without choosing */
   onClose: () => void;
 }) {
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  // a search belongs to the list it was opened on
+  useEffect(() => {
+    setSearching(false);
+    setQuery('');
+  }, [page]);
+  const pick = (c: string) => {
+    setSearching(false);
+    setQuery('');
+    onCoin(c);
+  };
   return (
     <nav className="sidebar" aria-label="Pages">
       <div className="side-pages">
         <a className="side-page" href="#markets" aria-current={page === 'markets' ? 'page' : undefined}>markets</a>
         <a className="side-page" href="#address" aria-current={page === 'address' ? 'page' : undefined}>address</a>
+        {/* phones: find a market (or look up an address) without leaving the menu */}
+        <button
+          type="button"
+          className="menu-search"
+          aria-label={page === 'markets' ? 'Search markets' : 'Look up an address'}
+          aria-expanded={searching}
+          onClick={() => {
+            setSearching((v) => !v);
+            setQuery('');
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
+        </button>
         <button type="button" className="menu-close" aria-label="Close the menu" onClick={onClose}>
           <svg viewBox="0 0 24 24" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
       </div>
       {/* keyed by page, so switching pages fades one list into the other */}
       <div className="side-body" key={page}>
+        {searching && page === 'markets' && (
+          <input
+            className="side-search"
+            type="text"
+            autoFocus
+            placeholder="search markets"
+            aria-label="Search markets"
+            autoComplete="off"
+            spellCheck={false}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+                setSearching(false);
+                setQuery('');
+              }
+            }}
+          />
+        )}
+        {searching && page === 'address' && (
+          <AddressForm
+            autoFocus
+            onPick={(a) => {
+              setSearching(false);
+              onAddress(a);
+            }}
+          />
+        )}
         {page === 'markets'
-          ? <MarketList markets={markets} coin={coin} onCoin={onCoin} />
+          ? <MarketList markets={markets} coin={coin} onCoin={pick} query={searching ? query : ''} searching={searching} />
           : <AddressList address={address} onAddress={onAddress} />}
       </div>
     </nav>
@@ -68,7 +123,14 @@ const remember = (key: string, v: string) => {
  * in the order they were starred, then by volume or by the day's move. Each
  * row's star keeps a market on top; the row opens it.
  */
-function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string; onCoin: (c: string) => void }) {
+function MarketList({ markets, coin, onCoin, query, searching }: {
+  markets: Market[];
+  coin: string;
+  onCoin: (c: string) => void;
+  query: string;
+  /** while searching, the search looks across every market and the filters step aside */
+  searching: boolean;
+}) {
   const [filter, setFilter] = useState<Filter>(() => remembered('house.filter', FILTERS.map((f) => f.key), 'all'));
   const [sort, setSort] = useState<Sort>(() => remembered('house.sort', ['volume', 'gainers', 'losers'] as const, 'volume'));
   const stars = useStars('markets');
@@ -78,8 +140,10 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
     const px = mids[m.name] ?? m.price;
     return { m, px, change: m.prev ? (px - m.prev) / m.prev : m.change, star: stars.indexOf(m.name) };
   });
+  // a search looks across every market, whatever the filter
+  const q = query.trim().toUpperCase();
   const shown = rows
-    .filter((r) => inFilter(filter, r.m, r.star >= 0))
+    .filter((r) => (q ? ticker(r.m.name).toUpperCase().includes(q) || assetName(r.m.name).toUpperCase().includes(q) : inFilter(filter, r.m, r.star >= 0)))
     .sort((a, b) => {
       if ((a.star >= 0) !== (b.star >= 0)) return a.star >= 0 ? -1 : 1;
       if (a.star >= 0) return a.star - b.star;
@@ -91,7 +155,7 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
   if (!markets.length) return <p className="side-empty">Loading markets…</p>;
   return (
     <>
-      <div className="side-filters" role="group" aria-label="Show">
+      {!searching && <div className="side-filters" role="group" aria-label="Show">
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -107,7 +171,7 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
             {f.label}
           </button>
         ))}
-      </div>
+      </div>}
       <div className="side-head">
         <span>{shown.length} {shown.length === 1 ? 'market' : 'markets'}</span>
         <button
@@ -151,7 +215,9 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
           ))}
         </ul>
       ) : (
-        <p className="side-empty">{filter === 'starred' ? 'Star a market to keep it here.' : 'Nothing here right now.'}</p>
+        <p className="side-empty">
+          {q ? 'No market by that name.' : filter === 'starred' ? 'Star a market to keep it here.' : 'Nothing here right now.'}
+        </p>
       )}
     </>
   );

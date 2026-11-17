@@ -265,7 +265,7 @@ export function Address({ address, onAddress, palette, onMenu }: {
 }
 
 /** An address field: checks the shape, then hands the address on in lower case. */
-function AddressForm({ onPick, autoFocus }: { onPick: (a: string) => void; autoFocus?: boolean }) {
+export function AddressForm({ onPick, autoFocus }: { onPick: (a: string) => void; autoFocus?: boolean }) {
   const [value, setValue] = useState('');
   const [invalid, setInvalid] = useState(false);
   return (

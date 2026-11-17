@@ -140,7 +140,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
 
       <div className="module">
         <div className="module-head">
-          <div className="seg seg-tray" role="group" aria-label="Range">
+          <div className="seg" role="group" aria-label="Range">
             {(Object.keys(RANGES) as Range[]).map((r) => (
               <button
                 key={r}
