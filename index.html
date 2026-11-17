@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-mode="sun">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>house</title>
+  <meta name="description" content="A home for Hyperliquid data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Young+Serif&display=swap">
+  <link rel="stylesheet" href="css/house.css">
+</head>
+<body>
+  <canvas id="light" aria-hidden="true"></canvas>
+
+  <div class="page">
+    <aside class="side">
+      <div>
+        <a class="wordmark" href="./">house</a>
+        <p class="lede">a home for hyperliquid data.</p>
+      </div>
+
+      <nav aria-label="Rooms">
+        <p class="label">rooms</p>
+        <ul class="list">
+          <li><a href="#markets" aria-current="page">markets</a></li>
+          <li class="soon">vaults<small>soon</small></li>
+          <li class="soon">staking<small>soon</small></li>
+          <li class="soon">ledger<small>soon</small></li>
+        </ul>
+      </nav>
+
+      <div>
+        <p class="label">outside</p>
+        <div class="controls">
+          <button type="button" data-mode-btn="sun" aria-pressed="false"><kbd>S</kbd><span class="name">sunlight</span></button>
+          <button type="button" data-mode-btn="moon" aria-pressed="false"><kbd>M</kbd><span class="name">moonlight</span></button>
+          <button type="button" data-mode-btn="rain" aria-pressed="false"><kbd>R</kbd><span class="name">rain</span></button>
+          <button type="button" class="sound" data-sound aria-pressed="false"><kbd>A</kbd>sound <span>off</span></button>
+        </div>
+      </div>
+
+      <p class="footnote"><span data-clock>--:--</span> · <span data-outside>clear sky</span></p>
+    </aside>
+
+    <main class="room" id="markets" data-room="markets">
+      <header class="room-head">
+        <h1>markets</h1>
+        <span class="status" data-market-status role="status">connecting…</span>
+      </header>
+
+      <dl class="summary">
+        <div><dt class="label">24h volume</dt><dd data-sum-vol>—</dd></div>
+        <div><dt class="label">open interest</dt><dd data-sum-oi>—</dd></div>
+        <div><dt class="label">perp markets</dt><dd data-sum-count>—</dd></div>
+      </dl>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr data-market-head></tr></thead>
+          <tbody data-market-body></tbody>
+        </table>
+      </div>
+
+      <p class="note">Perpetual markets on Hyperliquid, from its public info API, refreshed every 15 seconds. Funding is the current hourly rate. Open interest is in dollars at the mark price.</p>
+    </main>
+  </div>
+
+  <script src="js/light.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/market.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
