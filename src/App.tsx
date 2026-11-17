@@ -9,14 +9,13 @@ import { Mast } from './Mast';
 import { Sidebar } from './Sidebar';
 import { Markets } from './Markets';
 import { Address } from './Address';
-import { Stats } from './Stats';
 import { useMarkets } from './hl';
 // plain-JS engines carried over from the first version
 import { light } from './weather/light.js';
 import { sound } from './weather/sound.js';
 
 export type Mode = 'sun' | 'moon';
-export type Page = 'markets' | 'address' | 'stats';
+export type Page = 'markets' | 'address';
 /** The chart's colours in each light: ink for the line, thread for the linen. */
 export interface Palette { dark: boolean; ink: string; thread: string }
 const PALETTES: Record<Mode, Palette> = {
@@ -45,7 +44,7 @@ function firstMode(): Mode {
   const h = new Date().getHours();
   return h >= 6 && h < 19 ? 'sun' : 'moon';
 }
-const pageFromHash = (): Page => (location.hash === '#address' ? 'address' : location.hash === '#stats' ? 'stats' : 'markets');
+const pageFromHash = (): Page => (location.hash === '#address' ? 'address' : 'markets');
 
 export function App() {
   const [mode, setModeState] = useState<Mode>(firstMode);
@@ -146,8 +145,6 @@ export function App() {
         />
         {page === 'markets' ? (
           <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} searchSignal={searchSignal} onMenu={openMenu} />
-        ) : page === 'stats' ? (
-          <Stats key="stats" markets={markets} onMenu={openMenu} />
         ) : (
           <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} />
         )}

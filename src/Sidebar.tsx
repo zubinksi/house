@@ -38,9 +38,8 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
       <div className="side-pages">
         <a className="side-page" href="#markets" aria-current={page === 'markets' ? 'page' : undefined}>Markets</a>
         <a className="side-page" href="#address" aria-current={page === 'address' ? 'page' : undefined}>Address</a>
-        <a className="side-page" href="#stats" aria-current={page === 'stats' ? 'page' : undefined}>Stats</a>
         {/* phones: find a market (or look up an address) without leaving the menu */}
-        {page !== 'stats' && <button
+        <button
           type="button"
           className="menu-search"
           aria-label={page === 'markets' ? 'Search markets' : 'Look up an address'}
@@ -51,7 +50,7 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
           }}
         >
           <svg viewBox="0 0 24 24" aria-hidden><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
-        </button>}
+        </button>
         <button type="button" className="menu-close" aria-label="Close the menu" onClick={onClose}>
           <svg viewBox="0 0 24 24" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
@@ -87,7 +86,7 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
             }}
           />
         )}
-        {page === 'stats' ? null : page === 'markets'
+        {page === 'markets'
           ? <MarketList markets={markets} coin={coin} onCoin={pick} query={searching ? query : ''} searching={searching} />
           : <AddressList address={address} onAddress={onAddress} />}
       </div>
