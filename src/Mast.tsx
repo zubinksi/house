@@ -1,10 +1,13 @@
 /*
- * The masthead, straight on the wall: the iris and the name on the left (after
- * the home repo's), the time, sound and the bronze switch on the right.
+ * The masthead, straight on the wall: the iris and today's date on the left
+ * (after the home repo's), the time, sound and the bronze switch on the right.
  */
 import { useEffect, useState } from 'react';
 import iris from './assets/iris-white.png';
 import type { Mode } from './App';
+
+/** "NOV 17" */
+const dateline = (d: Date) => `${d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${d.getDate()}`;
 
 export function Mast({ mode, onTurn, soundOn, onSound, paperLight, onPaperLight }: {
   mode: Mode;
@@ -23,10 +26,11 @@ export function Mast({ mode, onTurn, soundOn, onSound, paperLight, onPaperLight 
 
   return (
     <header className="mast">
-      <a className="mast-home" href="#markets" aria-label="Home Office: markets">
+      <a className="mast-home" href="#markets" aria-label={`Home Office, ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}: markets`}>
         {/* the iris from the home repo, cut out and filled with the wall's ink */}
         <span className="mast-iris" style={{ maskImage: `url(${iris})`, WebkitMaskImage: `url(${iris})` }} aria-hidden />
-        <span className="mast-title">HOME OFFICE</span>
+        {/* today's date, in the masthead's serif capitals: NOV 17 */}
+        <span className="mast-title">{dateline(now)}</span>
       </a>
 
       <div className="mast-right">
