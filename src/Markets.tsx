@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LivelinePoint } from 'liveline';
 import { LinenLine } from './LinenLine';
-import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, dexOf, ISSUER } from './hl';
+import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, ISSUER } from './hl';
 import { ticker, assetName, keywords } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
@@ -45,6 +45,8 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
   const [history, setHistory] = useState<{ key: string; points: LivelinePoint[] }>({ key: '', points: [] });
   const [ticks, setTicks] = useState<LivelinePoint[]>([]);
   const [searching, setSearching] = useState(false);
+  const [scrub, setScrub] = useState<{ time: number; value: number } | null>(null);
+  useEffect(() => setScrub(null), [coin, range]);
   const mids = useMids();
   const stars = useStars('markets');
   const m = markets.find((x) => x.name === coin);
@@ -135,9 +137,14 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
         )}
       </div>
 
-      <div className="m-quote">
-        <div className="m-price">{px != null ? price(px) : '—'}</div>
-        {change != null && <div className={`m-change ${tone(change)}`}>{pct(change)}</div>}
+      {/* scrubbing the chart puts its price and moment here, in place of the live ones */}
+      <div className="m-quote" data-scrubbing={scrub ? true : undefined} aria-live="polite">
+        <div className="m-price">{scrub ? price(scrub.value) : px != null ? price(px) : '—'}</div>
+        {scrub ? (
+          <div className="m-change m-when">{when(scrub.time)}</div>
+        ) : (
+          change != null && <div className={`m-change ${tone(change)}`}>{pct(change)}</div>
+        )}
         {error && !m && <div className="m-error">Couldn't reach Hyperliquid.</div>}
       </div>
 
@@ -163,7 +170,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
             ))}
           </div>
         </div>
-        <div className="chart-box">
+        <div className="chart-box chart-box-tall">
           <LinenLine
             data={data}
             value={px ?? data[data.length - 1]?.value ?? 0}
@@ -174,20 +181,17 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
             loading={!data.length && !error}
             formatValue={(v) => '$' + price(v)}
             formatTime={formatTime}
-            formatWhen={when}
+            onScrub={setScrub}
             emptyText="No prices for this range"
           />
         </div>
       </div>
 
       <dl className="stats">
-        <div><dt>oracle price</dt><dd>{m ? '$' + price(m.oracle) : '—'}</dd></div>
         <div><dt>24h volume</dt><dd>{usdShort(m?.vol)}</dd></div>
         <div><dt>open interest</dt><dd>{usdShort(m?.oi)}</dd></div>
         <div><dt>funding / 1h</dt><dd className={tone(m?.funding)}>{pct(m?.funding, 4)}</dd></div>
         <div><dt>funding / yr</dt><dd className={tone(m?.funding)}>{m ? pct(m.funding * 24 * 365, 1) : '—'}</dd></div>
-        <div><dt>max leverage</dt><dd>{m ? `${m.maxLeverage}×` : '—'}</dd></div>
-        <div><dt>listed by</dt><dd>{dexOf(coin) ? ISSUER[dexOf(coin)] ?? dexOf(coin) : 'Hyperliquid'}</dd></div>
       </dl>
     </section>
   );

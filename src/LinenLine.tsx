@@ -132,21 +132,27 @@ export interface LinenLineProps {
   formatValue: (v: number) => string;
   formatTime: (t: number) => string;
   /** the moment under the crosshair, in full, for the readout above the plot */
-  formatWhen: (t: number) => string;
+  formatWhen?: (t: number) => string;
+  /**
+   * Hand the scrubbed point to the page instead (null when the crosshair
+   * leaves); the readout above the plot is then left out.
+   */
+  onScrub?: (pt: { time: number; value: number } | null) => void;
   emptyText?: string;
 }
 
-export function LinenLine({ ink, thread, dark, live = true, formatWhen, ...p }: LinenLineProps) {
+export function LinenLine({ ink, thread, dark, live = true, formatWhen, onScrub, ...p }: LinenLineProps) {
   const host = useRef<HTMLDivElement>(null);
   const tip = useRef<HTMLDivElement>(null);
-  const fmt = useRef({ formatWhen, formatValue: p.formatValue });
-  fmt.current = { formatWhen, formatValue: p.formatValue };
+  const fmt = useRef({ formatWhen, formatValue: p.formatValue, onScrub });
+  fmt.current = { formatWhen, formatValue: p.formatValue, onScrub };
 
   // written straight to the DOM: hovering redraws nothing in React
   const onHover = (pt: HoverPoint | null) => {
-    const el = tip.current;
-    if (!el) return;
     const f = fmt.current;
+    if (f.onScrub) return f.onScrub(pt && { time: pt.time, value: pt.value });
+    const el = tip.current;
+    if (!el || !f.formatWhen) return;
     el.classList.toggle('is-scrubbing', !!pt);
     el.innerHTML = '';
     if (!pt) return; // the readout shows only while scrubbing
@@ -163,7 +169,7 @@ export function LinenLine({ ink, thread, dark, live = true, formatWhen, ...p }: 
 
   return (
     <div className="linen-wrap">
-    <div className="chart-tip" ref={tip} aria-live="polite" />
+    {!onScrub && <div className="chart-tip" ref={tip} aria-live="polite" />}
     <div className="linen-line" ref={host}>
       <Liveline
         onHover={onHover}
