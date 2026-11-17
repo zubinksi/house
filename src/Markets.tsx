@@ -6,7 +6,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LivelinePoint } from 'liveline';
 import { LinenLine } from './LinenLine';
-import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, label, dexOf, ISSUER } from './hl';
+import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, dexOf, ISSUER } from './hl';
+import { ticker, assetName } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
 import { MenuButton } from './MenuButton';
@@ -102,21 +103,23 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
 
   return (
     <section className="detail" aria-labelledby="m-coin">
+      {/* after the midnight repo's chart page: ticker and name, then the price
+          large, then the day's move */}
       <div className="m-head">
         <MenuButton onClick={onMenu} />
         <div className="m-id">
-          {/* a HIP-3 market names who lists it */}
-          <p className="eyebrow">
-            {label(coin)}-USD{dexOf(coin) && ` · ${ISSUER[dexOf(coin)] ?? dexOf(coin)}`}
-          </p>
-          <div className="m-title">
-            <h1 className="m-coin" id="m-coin">{label(coin)}</h1>
-            <StarButton on={stars.includes(coin)} label={label(coin)} onClick={() => toggleStar('markets', coin)} />
-          </div>
+          <h1 className="m-ticker" id="m-coin">
+            <span className="live-dot" data-live={live != null || undefined} aria-hidden />
+            <b>{ticker(coin)}</b>
+            {assetName(coin) && <span className="m-name">{assetName(coin)}</span>}
+          </h1>
         </div>
-        <button type="button" className="icon-btn" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
-          <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
-        </button>
+        <div className="m-actions">
+          <StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} />
+          <button type="button" className="icon-btn" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
+            <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
+          </button>
+        </div>
         {searching && (
           <Search
             markets={markets}
@@ -129,15 +132,15 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
         )}
       </div>
 
-      <div className="m-price-row">
-        <span className="m-price">{px != null ? '$' + price(px) : '—'}</span>
-        {change != null && <span className={`m-change ${tone(change)}`}>{pct(change)} today</span>}
-        {error && !m && <span className="m-error">Couldn't reach Hyperliquid.</span>}
+      <div className="m-quote">
+        <div className="m-price">{px != null ? price(px) : '—'}</div>
+        {change != null && <div className={`m-change ${tone(change)}`}>{pct(change)}</div>}
+        {error && !m && <div className="m-error">Couldn't reach Hyperliquid.</div>}
       </div>
 
       <div className="module">
         <div className="module-head">
-          <div className="seg" role="group" aria-label="Range">
+          <div className="seg seg-tray" role="group" aria-label="Range">
             {(Object.keys(RANGES) as Range[]).map((r) => (
               <button
                 key={r}
@@ -181,6 +184,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
         <div><dt>funding / 1h</dt><dd className={tone(m?.funding)}>{pct(m?.funding, 4)}</dd></div>
         <div><dt>funding / yr</dt><dd className={tone(m?.funding)}>{m ? pct(m.funding * 24 * 365, 1) : '—'}</dd></div>
         <div><dt>max leverage</dt><dd>{m ? `${m.maxLeverage}×` : '—'}</dd></div>
+        <div><dt>listed by</dt><dd>{dexOf(coin) ? ISSUER[dexOf(coin)] ?? dexOf(coin) : 'Hyperliquid'}</dd></div>
       </dl>
     </section>
   );
@@ -195,9 +199,9 @@ function Search({ markets, onPick, onClose }: { markets: Market[]; onPick: (c: s
 
   const matches = useMemo(() => {
     const s = q.trim().toUpperCase();
-    const starts = (m: Market) => (s && label(m.name).toUpperCase().startsWith(s) ? 0 : 1);
+    const starts = (m: Market) => (s && ticker(m.name).toUpperCase().startsWith(s) ? 0 : 1);
     return markets
-      .filter((m) => !s || label(m.name).toUpperCase().includes(s))
+      .filter((m) => !s || ticker(m.name).toUpperCase().includes(s) || assetName(m.name).toUpperCase().includes(s))
       .sort((a, b) => starts(a) - starts(b) || b.vol - a.vol)
       .slice(0, 40);
   }, [q, markets]);
@@ -247,8 +251,8 @@ function Search({ markets, onPick, onClose }: { markets: Market[]; onPick: (c: s
             return (
               <li key={m.name} id={`opt-${i}`} role="option" aria-selected={i === active} onClick={() => onPick(m.name)} onMouseMove={() => setActive(i)}>
                 <span>
-                  {label(m.name)}
-                  {m.dex && <span className="r-note">{ISSUER[m.dex] ?? m.dex}</span>}
+                  {ticker(m.name)}
+                  <span className="r-note">{assetName(m.name) || (m.dex ? ISSUER[m.dex] ?? m.dex : '')}</span>
                 </span>
                 <span className="r-price">{price(px)}</span>
                 <span className={`r-chg ${tone(chg)}`}>{pct(chg)}</span>

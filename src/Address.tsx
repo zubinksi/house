@@ -9,7 +9,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { LinenLine } from './LinenLine';
-import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, label, DEXES, DASH } from './hl';
+import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, DEXES, DASH } from './hl';
+import { ticker } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
 import { MenuButton } from './MenuButton';
@@ -350,7 +351,7 @@ function Positions({ rows }: { rows: Position[] }) {
         {rows.length ? rows.map((p) => (
           <tr key={p.coin}>
             <th scope="row">
-              {label(p.coin)} <span className={`side ${p.size > 0 ? 'up' : 'down'}`}>{p.size > 0 ? 'long' : 'short'}</span>
+              {ticker(p.coin)} <span className={`side ${p.size > 0 ? 'up' : 'down'}`}>{p.size > 0 ? 'long' : 'short'}</span>
               <small>{p.leverage}</small>
             </th>
             <td className="num">{size(Math.abs(p.size))}</td>
@@ -408,7 +409,7 @@ function Orders({ rows }: { rows: Order[] }) {
         {rows.length ? rows.map((o, i) => (
           <tr key={i}>
             <td>{new Date(o.timestamp).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
-            <th scope="row">{label(o.coin)}</th>
+            <th scope="row">{ticker(o.coin)}</th>
             <td className={o.side === 'B' ? 'up' : 'down'}>{o.side === 'B' ? 'buy' : 'sell'} · {(o.orderType || 'limit').toLowerCase()}</td>
             <td className="num">{size(+o.sz)}</td>
             <td className="num">{price(+o.limitPx)}</td>

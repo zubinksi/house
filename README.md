@@ -32,11 +32,16 @@ over it full width; choosing a market or address slides the page back.
 
 **markets**: one perp market at a time, HYPE by default: crypto on Hyperliquid's
 own dex, or stocks, indices, commodities and currencies listed through HIP-3 by
-trade.xyz (the `xyz` dex; their names read `xyz:TSLA` in the API). Its live price, the change
-today, a live chart (1H, 1D, 1W, 1M, 1Y) and the market's numbers. The star keeps a
-market at the top of the sidebar's list, above every market (crypto and
-traditional together) in order of 24h volume. The
-search icon, or `/`, finds any market.
+trade.xyz (the `xyz` dex; their names read `xyz:TSLA` in the API). The page
+follows the midnight repo's chart page: a live dot, the ticker and its name, the
+price large, the day's move beneath it, ranges (1H to 1Y) in a tray, the live
+chart and the market's numbers. The search icon, or `/`, finds any market.
+
+The sidebar's market list borrows midnight's filtering: chips for all, starred,
+crypto, equities, pre-IPO, commodities and FX, and a sort that cycles volume,
+biggest gain and biggest fall. Starred markets stay on top in the order they were
+starred; the star on each row stars it there and then. trade.xyz doesn't publish
+categories, so they and the plain names live in `src/catalog.ts`, after midnight's.
 
 **address**: the portfolio behind any address. The header reads "portfolio" or
 "vault · name", with the short address as the title, its star and a copy link;
