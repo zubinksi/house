@@ -133,16 +133,14 @@ export interface LinenLineProps {
   formatTime: (t: number) => string;
   /** the moment under the crosshair, in full, for the readout above the plot */
   formatWhen: (t: number) => string;
-  /** shown in the readout's place when nothing is under the crosshair */
-  note?: string;
   emptyText?: string;
 }
 
-export function LinenLine({ ink, thread, dark, live = true, formatWhen, note = '', ...p }: LinenLineProps) {
+export function LinenLine({ ink, thread, dark, live = true, formatWhen, ...p }: LinenLineProps) {
   const host = useRef<HTMLDivElement>(null);
   const tip = useRef<HTMLDivElement>(null);
-  const fmt = useRef({ formatWhen, formatValue: p.formatValue, note });
-  fmt.current = { formatWhen, formatValue: p.formatValue, note };
+  const fmt = useRef({ formatWhen, formatValue: p.formatValue });
+  fmt.current = { formatWhen, formatValue: p.formatValue };
 
   // written straight to the DOM: hovering redraws nothing in React
   const onHover = (pt: HoverPoint | null) => {
@@ -151,10 +149,7 @@ export function LinenLine({ ink, thread, dark, live = true, formatWhen, note = '
     const f = fmt.current;
     el.classList.toggle('is-scrubbing', !!pt);
     el.innerHTML = '';
-    if (!pt) {
-      el.textContent = f.note;
-      return;
-    }
+    if (!pt) return; // the readout shows only while scrubbing
     const b = document.createElement('b');
     b.textContent = f.formatValue(pt.value);
     el.append(`${f.formatWhen(pt.time)} · `, b);
@@ -168,7 +163,7 @@ export function LinenLine({ ink, thread, dark, live = true, formatWhen, note = '
 
   return (
     <div className="linen-wrap">
-    <div className="chart-tip" ref={tip} aria-live="polite">{note}</div>
+    <div className="chart-tip" ref={tip} aria-live="polite" />
     <div className="linen-line" ref={host}>
       <Liveline
         onHover={onHover}

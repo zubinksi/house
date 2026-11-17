@@ -230,7 +230,6 @@ export function Address({ address, onAddress, palette, onMenu }: {
                 formatValue={(v) => usdShort(v)}
                 formatTime={formatTime}
                 formatWhen={(t) => new Date(t * 1000).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                note={series === 'value' ? 'account value' : 'profit and loss'}
                 emptyText="No history for this period yet"
               />
             </div>
