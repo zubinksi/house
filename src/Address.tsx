@@ -12,6 +12,7 @@ import { LinenLine } from './LinenLine';
 import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, label, DEXES, DASH } from './hl';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
+import { MenuButton } from './MenuButton';
 import type { Palette } from './App';
 
 const ADDR = /^0x[0-9a-fA-F]{40}$/;
@@ -91,7 +92,12 @@ async function load(addr: string): Promise<Data> {
   };
 }
 
-export function Address({ address, onAddress, palette }: { address: string; onAddress: (a: string) => void; palette: Palette }) {
+export function Address({ address, onAddress, palette, onMenu }: {
+  address: string;
+  onAddress: (a: string) => void;
+  palette: Palette;
+  onMenu: () => void;
+}) {
   const [searching, setSearching] = useState(false);
   const [state, setState] = useState<{ addr: string; data?: Data; error?: boolean }>({ addr: '' });
   const [period, setPeriod] = useState<Period>('1M');
@@ -141,6 +147,7 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
     <section className="detail" aria-labelledby="a-title">
       {address ? (
         <div className="m-head">
+          <MenuButton onClick={onMenu} />
           <div className="m-id">
             <p className="eyebrow">{data ? (data.vault ? `vault · ${data.vault}` : 'portfolio') : '\u00a0'}</p>
             <div className="m-title">
@@ -166,9 +173,12 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
         </div>
       ) : (
         <div className="a-start">
+          <div className="a-start-head">
+          <MenuButton onClick={onMenu} />
           <div className="m-id">
             <p className="eyebrow">portfolio or vault</p>
             <h1 className="m-coin" id="a-title">Look up an address</h1>
+          </div>
           </div>
           <AddressForm onPick={onAddress} autoFocus />
           <p className="a-hint">
@@ -215,7 +225,6 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
                 dark={palette.dark}
                 ink={palette.ink}
                 thread={palette.thread}
-                filament={palette.filament}
                 live={false}
                 loading={!data}
                 formatValue={(v) => usdShort(v)}

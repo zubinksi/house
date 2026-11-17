@@ -8,9 +8,6 @@
  *   - the one vertical gradient Liveline makes for the fill under the curve is
  *     swapped for the home repo's linen weave, clipped to the same curve
  *   - its system and SF Mono fonts become Geist Mono
- *   - at night its line is drawn as a filament: a warm-white wire with a tight
- *     glow, throwing a soft pool of amber light down onto the linen beneath
- *     (the line is the only 1.25px stroke Liveline makes)
  *   - its crosshair readout (the only 13px text a line chart draws) is left
  *     off the canvas; the home repo's readout sits above the plot instead:
  *     the moment, then the value in ink
@@ -66,17 +63,16 @@ function weave(w: number, h: number, dpr: number, thread: string) {
   return c;
 }
 
-type Ctx = CanvasRenderingContext2D & { __linen?: { thread: string; filament: boolean } };
+type Ctx = CanvasRenderingContext2D & { __linen?: { thread: string } };
 
-function dress(canvas: HTMLCanvasElement, thread: string, filament: boolean) {
+function dress(canvas: HTMLCanvasElement, thread: string) {
   const ctx = canvas.getContext('2d') as Ctx | null;
   if (!ctx) return;
   if (ctx.__linen) {
     ctx.__linen.thread = thread;
-    ctx.__linen.filament = filament;
     return;
   }
-  const state = (ctx.__linen = { thread, filament });
+  const state = (ctx.__linen = { thread });
   const fills = new WeakSet<CanvasGradient>();
   let sheet: HTMLCanvasElement | null = null;
   let sheetKey = '';
@@ -108,28 +104,6 @@ function dress(canvas: HTMLCanvasElement, thread: string, filament: boolean) {
     fill(...args);
   }) as typeof ctx.fill;
 
-  // the filament: a pool of light cast down, a tight glow, then the wire itself
-  const stroke = ctx.stroke.bind(ctx) as (...a: unknown[]) => void;
-  ctx.stroke = ((...args: unknown[]) => {
-    if (!state.filament || args.length || ctx.lineWidth !== LINE_WIDTH) return stroke(...args);
-    const dpr = window.devicePixelRatio || 1; // shadows are measured in device pixels
-    const alpha = ctx.globalAlpha;
-    ctx.save();
-    ctx.globalAlpha = alpha * 0.4;
-    ctx.lineWidth = 3;
-    ctx.shadowColor = 'rgba(255, 150, 60, 0.55)';
-    ctx.shadowBlur = 24 * dpr;
-    ctx.shadowOffsetY = 12 * dpr;
-    stroke();
-    ctx.restore();
-    ctx.save();
-    ctx.shadowColor = 'rgba(255, 190, 110, 0.7)';
-    ctx.shadowBlur = 4 * dpr;
-    stroke();
-    ctx.restore();
-    stroke();
-  }) as typeof ctx.stroke;
-
   // the crosshair readout is drawn in 13px; the house draws its own above the plot
   const readout = () => /(^|\s)13px\s/.test(ctx.font);
   const fillText = ctx.fillText.bind(ctx);
@@ -153,8 +127,6 @@ export interface LinenLineProps {
   dark: boolean;
   ink: string;
   thread: string;
-  /** draw the line as a glowing filament (moonlight) */
-  filament?: boolean;
   loading?: boolean;
   live?: boolean;
   formatValue: (v: number) => string;
@@ -166,7 +138,7 @@ export interface LinenLineProps {
   emptyText?: string;
 }
 
-export function LinenLine({ ink, thread, dark, filament = false, live = true, formatWhen, note = '', ...p }: LinenLineProps) {
+export function LinenLine({ ink, thread, dark, live = true, formatWhen, note = '', ...p }: LinenLineProps) {
   const host = useRef<HTMLDivElement>(null);
   const tip = useRef<HTMLDivElement>(null);
   const fmt = useRef({ formatWhen, formatValue: p.formatValue, note });
@@ -191,7 +163,7 @@ export function LinenLine({ ink, thread, dark, filament = false, live = true, fo
   // Liveline renders its canvas on mount; dress it, and re-dress when the ink changes
   useLayoutEffect(() => {
     const canvas = host.current?.querySelector('canvas');
-    if (canvas) dress(canvas, thread, filament);
+    if (canvas) dress(canvas, thread);
   });
 
   return (

@@ -9,6 +9,7 @@ import { LinenLine } from './LinenLine';
 import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, label, dexOf, ISSUER } from './hl';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
+import { MenuButton } from './MenuButton';
 import type { Palette } from './App';
 
 const RANGES = {
@@ -31,13 +32,14 @@ const stored = (k: string) => {
   }
 };
 
-export function Markets({ coin, onCoin, markets, error, palette, searchSignal }: {
+export function Markets({ coin, onCoin, markets, error, palette, searchSignal, onMenu }: {
   coin: string;
   onCoin: (c: string) => void;
   markets: Market[];
   error: boolean;
   palette: Palette;
   searchSignal: number;
+  onMenu: () => void;
 }) {
   const [range, setRange] = useState<Range>(() => (stored('house.range') as Range) in RANGES ? (stored('house.range') as Range) : '1D');
   const [history, setHistory] = useState<{ key: string; points: LivelinePoint[] }>({ key: '', points: [] });
@@ -106,6 +108,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
   return (
     <section className="detail" aria-labelledby="m-coin">
       <div className="m-head">
+        <MenuButton onClick={onMenu} />
         <div className="m-id">
           {/* a HIP-3 market names who lists it */}
           <p className="eyebrow">
@@ -167,7 +170,6 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
             dark={palette.dark}
             ink={palette.ink}
             thread={palette.thread}
-            filament={palette.filament}
             loading={!data.length && !error}
             formatValue={(v) => '$' + price(v)}
             formatTime={formatTime}

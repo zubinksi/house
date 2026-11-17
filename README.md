@@ -4,9 +4,7 @@ A home for Hyperliquid data.
 
 A slab on a wall. By day, warm sun falls through leaves across the home repo's
 grey wall, and the slab is cream paper. At night, moonlight comes through blinds
-onto a slate wall, and the slab turns warm walnut-dark with cream ink. Its charts
-are drawn in filament: a warm-white wire whose amber light pools on the linen
-beneath, an incandescent material in the way linen is a textile one. As in the home repo, type is pressed into the slab and rules are cut into
+onto a deep blue wall, and the slab turns a lighter blue with pale ink. As in the home repo, type is pressed into the slab and rules are cut into
 it, lit from the upper left. Nothing is drawn to look like wood or brick;
 the feeling of home comes from light, sound, paper and time of day.
 
@@ -29,12 +27,15 @@ Hyperliquid's public API directly.
 The sidebar holds the two pages side by side, with the list for the open page
 beneath them.
 
+On a phone only the page shows. The menu icon above its name lays the sidebar
+over it full width; choosing a market or address slides the page back.
+
 **markets**: one perp market at a time, HYPE by default: crypto on Hyperliquid's
 own dex, or stocks, indices, commodities and currencies listed through HIP-3 by
 trade.xyz (the `xyz` dex; their names read `xyz:TSLA` in the API). Its live price, the change
 today, a live chart (1H, 1D, 1W, 1M, 1Y) and the market's numbers. The star keeps a
-market at the top of the sidebar's list, above the 25 busiest by 24h volume,
-crypto or traditional. The
+market at the top of the sidebar's list, above every market (crypto and
+traditional together) in order of 24h volume. The
 search icon, or `/`, finds any market.
 
 **address**: the portfolio behind any address. The header reads "portfolio" or
@@ -56,8 +57,6 @@ area fill, so the adapter wraps the chart canvas's 2D context:
 - It swaps the one vertical gradient Liveline makes for the fill under the curve
   for the home repo's linen weave, clipped to the same curve.
 - It sets Liveline's fonts to Geist Mono.
-- At night it draws the line (the only 1.25px stroke) as filament: the wire, a
-  tight warm glow, and a soft pool of amber light cast down onto the linen.
 - It leaves Liveline's crosshair readout off the canvas (in line mode that is
   the only 13px text it draws). The home repo's readout replaces it, centred above
   the plot: the moment, then the value in ink.

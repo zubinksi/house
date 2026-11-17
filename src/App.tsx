@@ -17,11 +17,10 @@ import { sound } from './weather/sound.js';
 export type Mode = 'sun' | 'moon';
 export type Page = 'markets' | 'address';
 /** The chart's colours in each light: ink for the line, thread for the linen. */
-export interface Palette { dark: boolean; ink: string; thread: string; filament: boolean }
+export interface Palette { dark: boolean; ink: string; thread: string }
 const PALETTES: Record<Mode, Palette> = {
-  sun: { dark: false, ink: '#3a2e24', thread: '#7a6650', filament: false },
-  // at night the line is a filament: warm white, glowing, lighting the linen under it
-  moon: { dark: true, ink: '#ffdca8', thread: '#c29a63', filament: true },
+  sun: { dark: false, ink: '#3a2e24', thread: '#7a6650' },
+  moon: { dark: true, ink: '#e8ebf1', thread: '#a3aec3' },
 };
 
 const get = (k: string) => {
@@ -54,6 +53,23 @@ export function App() {
   const [address, setAddressState] = useState(() => get('house.address') || '');
   const [soundOn, setSoundOn] = useState(false);
   const [searchSignal, setSearchSignal] = useState(0);
+  // phones: the sidebar is a menu laid over the page, opened from its icon
+  const [menu, setMenu] = useState(false);
+  const [returned, setReturned] = useState(false);
+  const openMenu = () => {
+    setMenu(true);
+    setReturned(false);
+    window.scrollTo({ top: 0 });
+  };
+  const closeMenu = useCallback(() => {
+    setMenu((open) => {
+      if (open) {
+        setReturned(true);
+        window.scrollTo({ top: 0 });
+      }
+      return false;
+    });
+  }, []);
   const { list: markets, error } = useMarkets();
 
   const setMode = useCallback((m: Mode) => {
@@ -89,6 +105,7 @@ export function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMenu();
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target as Element).tagName)) return;
       const k = e.key.toLowerCase();
@@ -104,18 +121,32 @@ export function App() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [page, setMode, turn, toggleSound]);
+  }, [page, setMode, turn, toggleSound, closeMenu]);
 
   const palette = PALETTES[mode];
   return (
     <>
       <Mast mode={mode} onTurn={turn} soundOn={soundOn} onSound={toggleSound} />
-      <main className="slab">
-        <Sidebar page={page} markets={markets} coin={coin} onCoin={setCoin} address={address} onAddress={setAddress} />
+      <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
+        <Sidebar
+          page={page}
+          markets={markets}
+          coin={coin}
+          onCoin={(c) => {
+            setCoin(c);
+            closeMenu();
+          }}
+          address={address}
+          onAddress={(a) => {
+            setAddress(a);
+            closeMenu();
+          }}
+          onClose={closeMenu}
+        />
         {page === 'markets' ? (
-          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} searchSignal={searchSignal} />
+          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} searchSignal={searchSignal} onMenu={openMenu} />
         ) : (
-          <Address key="address" address={address} onAddress={setAddress} palette={palette} />
+          <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} />
         )}
       </main>
     </>
