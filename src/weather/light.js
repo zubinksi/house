@@ -6,7 +6,7 @@
  * canvas is drawn at low resolution, blurred with CSS, and blended over the
  * wall, so it reads as ambient light rather than an image.
  *
- *   sun  — multiply: warm window patch, swaying leaf shadows, passing clouds
+ *   sun  — screen:   warm window light, swaying leaf shadows, passing clouds
  *   moon — screen:   cool light through blinds, a curtain edge, cloud shadows
  */
 const TAU = Math.PI * 2;
@@ -56,12 +56,15 @@ function windowPath(ctx, W, H, w) {
 
 /* ── Sunlight ─────────────────────────────────────────────────────────── */
 const sun = {
-  blend: 'multiply',
+  // screen adds the sun to the grey wall: black leaves it as it is, the warm
+  // colour brightens the patch the window throws
+  blend: 'screen',
   blur: 3,
   scale: 0.35,
-  shade: '#dbd2c3',
-  light: '#fff8ec',
-  win: { x: 0.36, y: -0.04, w: 0.6, h: 1.12, skew: -0.32, cols: 2, rows: 3, m: 0.022 },
+  shade: '#000000',
+  light: '#8f7b59',
+  // starts below the masthead, so the light never washes out its white text
+  win: { x: 0.36, y: 0.1, w: 0.6, h: 1.0, skew: -0.32, cols: 2, rows: 3, m: 0.022 },
 
   build(W, H) {
     const R = rng(11);

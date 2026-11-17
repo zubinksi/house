@@ -2,8 +2,8 @@
 
 A home for Hyperliquid data.
 
-A slab on a wall. The light outside falls on the wall: sun through leaves by
-day, moonlight through blinds at night. The slab is cream paper by day and a dark
+A slab on a wall. The light outside falls on the wall: by day, warm sun through
+leaves across the home repo's grey wall; at night, moonlight through blinds. The slab is cream paper by day and a dark
 board by night, with ink to match. Nothing is drawn to look like wood or brick;
 the feeling of home comes from light, sound, paper and time of day.
 
@@ -31,7 +31,9 @@ today, a live chart (1H, 1D, 1W, 1M, 1Y) and the market's numbers. The star keep
 market at the top of the sidebar's list, above the 25 busiest by 24h volume. The
 search icon, or `/`, finds any market.
 
-**address**: the portfolio behind any address. Account value, PnL and volume for
+**address**: the portfolio behind any address. The header reads "portfolio" or
+"vault · name", with the short address as the title, its star and a copy link;
+the search icon looks up another address or jumps to a starred one. Account value, PnL and volume for
 the period, an account value or PnL chart (1D, 1W, 1M, All), and positions, spot
 balances and open orders. The star keeps an address in the sidebar.
 
@@ -48,6 +50,9 @@ area fill, so the adapter wraps the chart canvas's 2D context:
 - It swaps the one vertical gradient Liveline makes for the fill under the curve
   for the home repo's linen weave, clipped to the same curve.
 - It sets Liveline's fonts to Geist Mono.
+- It leaves Liveline's crosshair readout off the canvas (in line mode that is
+  the only 13px text it draws). The home repo's readout replaces it, centred above
+  the plot: the moment, then the value in ink.
 - CSS gives the badge paper-coloured text on its ink pill.
 
 This depends on how Liveline 0.0.7 draws, so the package is pinned to that exact

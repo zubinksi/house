@@ -8,12 +8,16 @@
  *   - the one vertical gradient Liveline makes for the fill under the curve is
  *     swapped for the home repo's linen weave, clipped to the same curve
  *   - its system and SF Mono fonts become Geist Mono
+ *   - its crosshair readout (the only 13px text a line chart draws) is left
+ *     off the canvas; the home repo's readout sits above the plot instead:
+ *     the moment, then the value in ink
  *
  * The adapter relies on Liveline 0.0.7's drawing order, so the package is pinned
  * to that exact version. If an upgrade stops the linen showing, the chart still
  * works with Liveline's own gradient.
  */
 import { useLayoutEffect, useRef } from 'react';
+import type { HoverPoint } from 'liveline';
 import { Liveline, type LivelinePoint } from 'liveline';
 
 const MONO = '"Geist Mono", ui-monospace, monospace';
@@ -99,6 +103,13 @@ function dress(canvas: HTMLCanvasElement, thread: string) {
     fill(...args);
   }) as typeof ctx.fill;
 
+  // the crosshair readout is drawn in 13px; the house draws its own above the plot
+  const readout = () => /(^|\s)13px\s/.test(ctx.font);
+  const fillText = ctx.fillText.bind(ctx);
+  const strokeText = ctx.strokeText.bind(ctx);
+  ctx.fillText = ((...a: Parameters<typeof fillText>) => void (readout() || fillText(...a))) as typeof ctx.fillText;
+  ctx.strokeText = ((...a: Parameters<typeof strokeText>) => void (readout() || strokeText(...a))) as typeof ctx.strokeText;
+
   const font = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'font')!;
   Object.defineProperty(ctx, 'font', {
     configurable: true,
@@ -119,11 +130,34 @@ export interface LinenLineProps {
   live?: boolean;
   formatValue: (v: number) => string;
   formatTime: (t: number) => string;
+  /** the moment under the crosshair, in full, for the readout above the plot */
+  formatWhen: (t: number) => string;
+  /** shown in the readout's place when nothing is under the crosshair */
+  note?: string;
   emptyText?: string;
 }
 
-export function LinenLine({ ink, thread, dark, live = true, ...p }: LinenLineProps) {
+export function LinenLine({ ink, thread, dark, live = true, formatWhen, note = '', ...p }: LinenLineProps) {
   const host = useRef<HTMLDivElement>(null);
+  const tip = useRef<HTMLDivElement>(null);
+  const fmt = useRef({ formatWhen, formatValue: p.formatValue, note });
+  fmt.current = { formatWhen, formatValue: p.formatValue, note };
+
+  // written straight to the DOM: hovering redraws nothing in React
+  const onHover = (pt: HoverPoint | null) => {
+    const el = tip.current;
+    if (!el) return;
+    const f = fmt.current;
+    el.classList.toggle('is-scrubbing', !!pt);
+    el.innerHTML = '';
+    if (!pt) {
+      el.textContent = f.note;
+      return;
+    }
+    const b = document.createElement('b');
+    b.textContent = f.formatValue(pt.value);
+    el.append(`${f.formatWhen(pt.time)} · `, b);
+  };
 
   // Liveline renders its canvas on mount; dress it, and re-dress when the ink changes
   useLayoutEffect(() => {
@@ -132,8 +166,12 @@ export function LinenLine({ ink, thread, dark, live = true, ...p }: LinenLinePro
   });
 
   return (
+    <div className="linen-wrap">
+    <div className="chart-tip" ref={tip} aria-live="polite">{note}</div>
     <div className="linen-line" ref={host}>
       <Liveline
+        onHover={onHover}
+        tooltipOutline={false}
         data={p.data}
         value={p.value}
         window={p.window}
@@ -150,6 +188,7 @@ export function LinenLine({ ink, thread, dark, live = true, ...p }: LinenLinePro
         emptyText={p.emptyText}
         lerpSpeed={0.12}
       />
+    </div>
     </div>
   );
 }

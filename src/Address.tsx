@@ -5,7 +5,7 @@
  * Reads clearinghouseState (perps), spotClearinghouseState (spot balances),
  * portfolio (account value and PnL history) and frontendOpenOrders.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LinenLine } from './LinenLine';
 import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, DASH } from './hl';
 import { toggleStar, useStars } from './stars';
@@ -27,6 +27,8 @@ interface Position {
 interface Balance { coin: string; total: number; available: number; value: number | null; entry: number }
 interface Order { coin: string; side: 'A' | 'B'; limitPx: string; sz: string; timestamp: number; orderType?: string }
 interface Data {
+  /** the vault's name, or null for an ordinary account */
+  vault: string | null;
   perpValue: number; withdrawable: number; spotValue: number;
   history: Record<string, History>; positions: Position[]; balances: Balance[]; orders: Order[];
 }
@@ -39,13 +41,14 @@ async function load(addr: string): Promise<Data> {
       liquidationPx: string | null; marginUsed: string; leverage?: { type: string; value: number }; cumFunding?: { sinceOpen: string };
     } }[];
   };
-  const [perp, spot, portfolio, orders, mkts, spotPx] = await Promise.all([
+  const [perp, spot, portfolio, orders, mkts, spotPx, vault] = await Promise.all([
     info<Perp>({ type: 'clearinghouseState', user: addr }),
     info<{ balances: { coin: string; total: string; hold: string; entryNtl: string }[] }>({ type: 'spotClearinghouseState', user: addr }),
     info<[string, History][]>({ type: 'portfolio', user: addr }),
     info<Order[]>({ type: 'frontendOpenOrders', user: addr }),
     fetchMarkets().catch(() => []),
     fetchSpotPrices().catch(() => new Map([['USDC', 1]])),
+    info<{ name: string } | null>({ type: 'vaultDetails', vaultAddress: addr }).catch(() => null),
   ]);
   const marks = new Map(mkts.map((m) => [m.name, m.price]));
   const balances = (spot.balances || [])
@@ -56,6 +59,7 @@ async function load(addr: string): Promise<Data> {
     .filter((b) => b.total !== 0)
     .sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
   return {
+    vault: vault?.name ?? null,
     perpValue: +perp.marginSummary.accountValue,
     withdrawable: +perp.withdrawable,
     spotValue: balances.reduce((s, b) => s + (b.value || 0), 0),
@@ -81,8 +85,7 @@ async function load(addr: string): Promise<Data> {
 }
 
 export function Address({ address, onAddress, palette }: { address: string; onAddress: (a: string) => void; palette: Palette }) {
-  const [input, setInput] = useState(address);
-  const [invalid, setInvalid] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [state, setState] = useState<{ addr: string; data?: Data; error?: boolean }>({ addr: '' });
   const [period, setPeriod] = useState<Period>('1M');
   const [series, setSeries] = useState<'value' | 'pnl'>('value');
@@ -91,7 +94,6 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
   const stars = useStars('addresses');
 
   useEffect(() => {
-    setInput(address);
     if (!address) return;
     let on = true;
     setState((s) => ({ addr: address, data: s.addr === address ? s.data : undefined }));
@@ -103,14 +105,14 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
     };
   }, [address]);
 
-  const submit = (value: string) => {
-    const a = value.trim();
-    if (!ADDR.test(a)) {
-      setInvalid(true);
-      return;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied('copied');
+    } catch {
+      setCopied(address); // shown in full to select by hand
     }
-    setInvalid(false);
-    onAddress(a.toLowerCase());
+    setTimeout(() => setCopied(''), 2500);
   };
 
   const data = state.addr === address ? state.data : undefined;
@@ -130,64 +132,50 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
 
   return (
     <section className="detail" aria-labelledby="a-title">
-      <div className="a-head">
-        <h1 className="a-title" id="a-title">address</h1>
-        <form
-          className="a-form"
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit(input);
-          }}
-        >
-          <label className="visually-hidden" htmlFor="a-input">Hyperliquid address</label>
-          <input
-            id="a-input"
-            type="text"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="0x… any Hyperliquid address"
-            aria-invalid={invalid || undefined}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button type="submit" className="btn">look up</button>
-        </form>
-        {!address && (
+      {address ? (
+        <div className="m-head">
+          <div className="m-id">
+            <p className="eyebrow">{data ? (data.vault ? `vault · ${data.vault}` : 'portfolio') : '\u00a0'}</p>
+            <div className="m-title">
+              <h1 className="m-coin" id="a-title" title={address}>{shortAddr(address)}</h1>
+              <StarButton on={stars.includes(address)} label={shortAddr(address)} onClick={() => toggleStar('addresses', address)} />
+              <button type="button" className="link a-copy" onClick={copy}>{copied === 'copied' ? 'copied' : 'copy'}</button>
+            </div>
+            {copied && copied !== 'copied' && <code className="a-full">{copied}</code>}
+          </div>
+          <button type="button" className="icon-btn" aria-label="Look up another address" aria-expanded={searching} title="Look up an address" onClick={() => setSearching((v) => !v)}>
+            <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
+          </button>
+          {searching && (
+            <AddressSearch
+              stars={stars}
+              onPick={(a) => {
+                onAddress(a);
+                setSearching(false);
+              }}
+              onClose={() => setSearching(false)}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="a-start">
+          <div className="m-id">
+            <p className="eyebrow">portfolio or vault</p>
+            <h1 className="m-coin" id="a-title">Look up an address</h1>
+          </div>
+          <AddressForm onPick={onAddress} autoFocus />
           <p className="a-hint">
-            or try <button type="button" className="link" onClick={() => submit(EXAMPLE)}>one of HLP's trading vaults</button>
+            or try <button type="button" className="link" onClick={() => onAddress(EXAMPLE)}>one of HLP's trading vaults</button>
           </p>
-        )}
-        {invalid && <p className="a-error" role="alert">An address is 0x followed by 40 letters and numbers.</p>}
-        {state.error && state.addr === address && (
-          <p className="a-error" role="alert">Couldn't load {shortAddr(address)} from Hyperliquid. Check your connection and try again.</p>
-        )}
-      </div>
+        </div>
+      )}
+
+      {state.error && state.addr === address && (
+        <p className="a-error" role="alert">Couldn't load {shortAddr(address)} from Hyperliquid. Check your connection and try again.</p>
+      )}
 
       {address && !state.error && (
         <div className="a-result" data-state={data ? 'ready' : 'loading'}>
-          <div className="a-who">
-            <span className="eyebrow">portfolio of</span>
-            <code title={address}>{shortAddr(address)}</code>
-            <StarButton on={stars.includes(address)} label={shortAddr(address)} onClick={() => toggleStar('addresses', address)} />
-            <button
-              type="button"
-              className="link"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(address);
-                  setCopied('copied');
-                } catch {
-                  setCopied(address);
-                }
-                setTimeout(() => setCopied(''), 2500);
-              }}
-            >
-              {copied === 'copied' ? 'copied' : 'copy'}
-            </button>
-            {copied && copied !== 'copied' && <code className="a-full">{copied}</code>}
-          </div>
-
           <dl className="stats stats-lead">
             <div><dt>account value</dt><dd>{data ? usd(data.perpValue + data.spotValue) : DASH}</dd></div>
             <div><dt>pnl · {PERIOD_WORD[period]}</dt><dd className={tone(pnl)}>{data ? usd(pnl) : DASH}</dd></div>
@@ -224,6 +212,8 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
                 loading={!data}
                 formatValue={(v) => usdShort(v)}
                 formatTime={formatTime}
+                formatWhen={(t) => new Date(t * 1000).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                note={series === 'value' ? 'account value' : 'profit and loss'}
                 emptyText="No history for this period yet"
               />
             </div>
@@ -254,6 +244,75 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
         </div>
       )}
     </section>
+  );
+}
+
+/** An address field: checks the shape, then hands the address on in lower case. */
+function AddressForm({ onPick, autoFocus }: { onPick: (a: string) => void; autoFocus?: boolean }) {
+  const [value, setValue] = useState('');
+  const [invalid, setInvalid] = useState(false);
+  return (
+    <form
+      className="a-form"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        const a = value.trim();
+        if (!ADDR.test(a)) return setInvalid(true);
+        setInvalid(false);
+        onPick(a.toLowerCase());
+      }}
+    >
+      <label className="visually-hidden" htmlFor="a-input">Hyperliquid address</label>
+      <input
+        id="a-input"
+        type="text"
+        autoComplete="off"
+        spellCheck={false}
+        autoFocus={autoFocus}
+        placeholder="0x… any Hyperliquid address"
+        aria-invalid={invalid || undefined}
+        aria-describedby={invalid ? 'a-invalid' : undefined}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
+      <button type="submit" className="btn">look up</button>
+      {invalid && <p className="a-error" id="a-invalid" role="alert">An address is 0x followed by 40 letters and numbers.</p>}
+    </form>
+  );
+}
+
+/** The search icon's panel: a field for any address, and the starred ones to jump to. */
+function AddressSearch({ stars, onPick, onClose }: { stars: string[]; onPick: (a: string) => void; onClose: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const away = (e: PointerEvent) => {
+      if (box.current && !box.current.contains(e.target as Node) && !(e.target as Element).closest?.('.icon-btn')) onClose();
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('pointerdown', away);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', away);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [onClose]);
+  return (
+    <div className="search search-wide" ref={box}>
+      <AddressForm onPick={onPick} autoFocus />
+      <ul className="results" aria-label="Starred addresses">
+        {stars.map((a) => (
+          <li key={a} onClick={() => onPick(a)} title={a}>
+            <span>{shortAddr(a)} <span className="side-star">★</span></span>
+          </li>
+        ))}
+        {!stars.includes(EXAMPLE) && (
+          <li onClick={() => onPick(EXAMPLE)} title={EXAMPLE}>
+            <span>{shortAddr(EXAMPLE)} <span className="r-note">HLP trading vault</span></span>
+          </li>
+        )}
+      </ul>
+    </div>
   );
 }
 

@@ -19,6 +19,9 @@ const RANGES = {
   '1Y': { interval: '1d', secs: 365 * 86400 },
 } as const;
 type Range = keyof typeof RANGES;
+const RANGE_WORD: Record<Range, string> = { '1H': 'hour', '1D': 'day', '1W': 'week', '1M': 'month', '1Y': 'year' };
+const when = (t: number) =>
+  new Date(t * 1000).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 const stored = (k: string) => {
   try {
@@ -92,6 +95,10 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
     return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
   };
 
+  const first = data[0]?.value;
+  const latest = px ?? data[data.length - 1]?.value;
+  const note = first && latest != null ? `${pct((latest - first) / first)} over the past ${RANGE_WORD[range]}` : '';
+
   useEffect(() => {
     if (searchSignal) setSearching(true);
   }, [searchSignal]);
@@ -160,6 +167,8 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
             loading={!data.length && !error}
             formatValue={(v) => '$' + price(v)}
             formatTime={formatTime}
+            formatWhen={when}
+            note={note}
             emptyText="No prices for this range"
           />
         </div>
