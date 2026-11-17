@@ -137,19 +137,16 @@ function draw() {
   drawPaper();
 }
 
-/* ── The same light, falling faintly across the slab (prototype) ──
+/* ── Moonlight, falling faintly across the slab too ──
  * A second canvas, clipped to the slab's outline, carries a softened copy of
  * the wall's light. By day it multiplies onto the paper: the paper's own light
  * warm shade where the window's light doesn't reach, warm white where it does,
  * so text never sits in real shadow. By night the blinds' light is screened on
  * faintly. It is blurred more than the wall, as light on a sheet is. */
 const PAPER = {
-  // by day, the same blind's light on the paper: a light warm shade between
-  // the slats, warm white where the light falls
-  sun: { blend: 'multiply', shade: '#e2d9ca', gain: 2, blur: 10, opacity: 0.5 },
   moon: { blend: 'screen', blur: 10, opacity: 0.65 },
 };
-let paper = null, pctx = null, slab = null, paperOn = true, shown = false, lastClip = '';
+let paper = null, pctx = null, slab = null, shown = false, lastClip = '';
 let slow = null, sctx = null; // the slab's own, slower frame of the scene
 
 function clipToSlab() {
@@ -165,11 +162,12 @@ function clipToSlab() {
 
 function paperOpacity() {
   if (!paper) return;
-  paper.style.opacity = paperOn && shown && cur ? String(PAPER[curName].opacity) : '0';
+  // only the lights listed in PAPER fall across the slab (moonlight)
+  paper.style.opacity = shown && cur && PAPER[curName] ? String(PAPER[curName].opacity) : '0';
 }
 
 function drawPaper() {
-  if (!paper || !paperOn || !cur) return;
+  if (!paper || !cur || !PAPER[curName]) return;
   slab = slab && slab.isConnected ? slab : document.querySelector('.slab');
   const p = PAPER[curName];
   const W = canvas.width, H = canvas.height;
@@ -276,11 +274,5 @@ export const light = {
   mountPaper(el) {
     paper = el;
     pctx = paper.getContext('2d');
-  },
-  /** Light on the slab, on or off. */
-  paper(on) {
-    paperOn = on;
-    paperOpacity();
-    if (on && cur) draw();
   },
 };
