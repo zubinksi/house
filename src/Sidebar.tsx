@@ -36,10 +36,11 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
   return (
     <nav className="sidebar" aria-label="Pages">
       <div className="side-pages">
-        <a className="side-page" href="#markets" aria-current={page === 'markets' ? 'page' : undefined}>markets</a>
-        <a className="side-page" href="#address" aria-current={page === 'address' ? 'page' : undefined}>address</a>
+        <a className="side-page" href="#markets" aria-current={page === 'markets' ? 'page' : undefined}>Markets</a>
+        <a className="side-page" href="#address" aria-current={page === 'address' ? 'page' : undefined}>Address</a>
+        <a className="side-page" href="#stats" aria-current={page === 'stats' ? 'page' : undefined}>Stats</a>
         {/* phones: find a market (or look up an address) without leaving the menu */}
-        <button
+        {page !== 'stats' && <button
           type="button"
           className="menu-search"
           aria-label={page === 'markets' ? 'Search markets' : 'Look up an address'}
@@ -50,7 +51,7 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
           }}
         >
           <svg viewBox="0 0 24 24" aria-hidden><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
-        </button>
+        </button>}
         <button type="button" className="menu-close" aria-label="Close the menu" onClick={onClose}>
           <svg viewBox="0 0 24 24" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
         </button>
@@ -86,7 +87,7 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
             }}
           />
         )}
-        {page === 'markets'
+        {page === 'stats' ? null : page === 'markets'
           ? <MarketList markets={markets} coin={coin} onCoin={pick} query={searching ? query : ''} searching={searching} />
           : <AddressList address={address} onAddress={onAddress} />}
       </div>
@@ -202,10 +203,7 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
                 ★
               </button>
               <button type="button" className="side-row" onClick={() => onCoin(m.name)}>
-                <span className="side-id">
-                  <b>{ticker(m.name)}</b>
-                  {assetName(m.name) && <small>{assetName(m.name)}</small>}
-                </span>
+                <span className="side-id">{ticker(m.name)}</span>
                 <span className="side-q">
                   <span className="side-px">{price(px)}</span>
                   <span className={`side-chg ${tone(change)}`}>{pct(change)}</span>

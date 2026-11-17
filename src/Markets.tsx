@@ -108,14 +108,17 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
       <div className="m-head">
         <MenuButton onClick={onMenu} />
         <div className="m-id">
+          <div className="m-ticker-row">
           <h1 className="m-ticker" id="m-coin">
             <span className="live-dot" data-live={live != null || undefined} aria-hidden />
             <b>{ticker(coin)}</b>
             {assetName(coin) && <span className="m-name">{assetName(coin)}</span>}
           </h1>
+          {/* the star right after the name, in line */}
+          <StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} />
+          </div>
         </div>
         <div className="m-actions">
-          <StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} />
           <button type="button" className="icon-btn" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
             <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
           </button>
