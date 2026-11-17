@@ -3,7 +3,12 @@
  *
  * Every REST request is a POST to /info naming its type; no key is needed.
  * The socket subscribes to allMids, the mid price of every market, pushed as
- * it changes. Docs: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api
+ * it changes.
+ *
+ * Markets come from two perp dexes: Hyperliquid's own (crypto), and trade.xyz's
+ * HIP-3 dex "xyz" (stocks, indices, commodities, currencies). A HIP-3 market's
+ * name carries its dex, e.g. "xyz:TSLA"; that full name is what the API, the
+ * socket and the stars use. label() gives the name to show. Docs: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api
  */
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
@@ -28,8 +33,18 @@ export async function info<T = unknown>(body: unknown, timeoutMs = 10000): Promi
 }
 
 /* ── Markets ── */
+/** The perp dexes the house reads: '' is Hyperliquid's own. */
+export const DEXES = ['', 'xyz'] as const;
+/** Who lists a HIP-3 dex's markets. */
+export const ISSUER: Record<string, string> = { xyz: 'trade.xyz' };
+export const dexOf = (name: string) => (name.includes(':') ? name.slice(0, name.indexOf(':')) : '');
+/** "xyz:TSLA" → "TSLA" */
+export const label = (name: string) => (name.includes(':') ? name.slice(name.indexOf(':') + 1) : name);
+
 export interface Market {
+  /** the API's name: "HYPE", or "xyz:TSLA" for a HIP-3 market */
   name: string;
+  dex: string;
   maxLeverage: number;
   price: number;
   oracle: number;
@@ -56,28 +71,35 @@ let marketsP: Promise<Market[]> | null = null;
 export function fetchMarkets(maxAgeMs = 10000): Promise<Market[]> {
   if (marketsP && Date.now() - marketsAt < maxAgeMs) return marketsP;
   marketsAt = Date.now();
-  marketsP = info<[{ universe: { name: string; maxLeverage: number; isDelisted?: boolean }[] }, AssetCtx[]]>({
-    type: 'metaAndAssetCtxs',
-  })
-    .then(([meta, ctxs]) =>
-      meta.universe.flatMap((u, i) => {
-        const c = ctxs[i];
-        if (!c || u.isDelisted || c.markPx == null) return [];
-        const price = +c.markPx;
-        const prev = +c.prevDayPx;
-        return [{
-          name: u.name,
-          maxLeverage: u.maxLeverage,
-          price,
-          oracle: +c.oraclePx,
-          prev,
-          change: prev ? (price - prev) / prev : 0,
-          funding: +c.funding,
-          oi: +c.openInterest * price,
-          vol: +c.dayNtlVlm,
-        }];
-      }),
-    )
+  type Meta = [{ universe: { name: string; maxLeverage: number; isDelisted?: boolean }[] }, AssetCtx[]];
+  const parse = (dex: string) => ([meta, ctxs]: Meta): Market[] =>
+    meta.universe.flatMap((u, i) => {
+      const c = ctxs[i];
+      if (!c || u.isDelisted || c.markPx == null) return [];
+      const price = +c.markPx;
+      const prev = +c.prevDayPx;
+      return [{
+        name: u.name,
+        dex,
+        maxLeverage: u.maxLeverage,
+        price,
+        oracle: +c.oraclePx,
+        prev,
+        change: prev ? (price - prev) / prev : 0,
+        funding: +c.funding,
+        oi: +c.openInterest * price,
+        vol: +c.dayNtlVlm,
+      }];
+    });
+  marketsP = Promise.all(
+    DEXES.map((dex) =>
+      info<Meta>({ type: 'metaAndAssetCtxs', ...(dex && { dex }) })
+        .then(parse(dex))
+        // a HIP-3 dex that fails leaves the crypto markets standing
+        .catch((e) => (dex ? [] : Promise.reject(e))),
+    ),
+  )
+    .then((lists) => lists.flat())
     .catch((e) => {
       marketsP = null;
       throw e;
@@ -152,12 +174,15 @@ function connect() {
   }
   socket.onopen = () => {
     retry = 1000;
-    socket?.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'allMids' } }));
+    for (const dex of DEXES) {
+      socket?.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'allMids', ...(dex && { dex }) } }));
+    }
   };
   socket.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.channel !== 'allMids') return;
-    const next: Record<string, number> = {};
+    // each dex sends its own mids; HIP-3 names already carry their dex
+    const next: Record<string, number> = { ...mids };
     for (const [k, v] of Object.entries(msg.data.mids as Record<string, string>)) next[k] = +v;
     mids = next;
     status = 'live';

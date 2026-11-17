@@ -1,10 +1,12 @@
 /*
  * The slab's sidebar: the two pages side by side, and beneath them the list for
  * the page you're on. Markets: starred first, then the busiest by 24h volume,
- * with live prices. Address: the starred addresses.
+ * crypto or traditional (trade.xyz's HIP-3 markets), with live prices.
+ * Address: the starred addresses.
  */
+import { useState } from 'react';
 import type { Page } from './App';
-import { type Market, price, pct, tone, shortAddr, useMids } from './hl';
+import { type Market, price, pct, tone, shortAddr, useMids, label } from './hl';
 import { useStars } from './stars';
 
 const TOP = 25;
@@ -30,13 +32,31 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress }: {
   );
 }
 
+type Group = 'crypto' | 'traditional';
+const GROUP_KEY = 'house.group';
+
 function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string; onCoin: (c: string) => void }) {
+  const [group, setGroupState] = useState<Group>(() => {
+    try {
+      return localStorage.getItem(GROUP_KEY) === 'traditional' ? 'traditional' : 'crypto';
+    } catch {
+      return 'crypto';
+    }
+  });
+  const setGroup = (g: Group) => {
+    setGroupState(g);
+    try {
+      localStorage.setItem(GROUP_KEY, g);
+    } catch {
+      // remembered for the visit only
+    }
+  };
   const stars = useStars('markets');
   const mids = useMids();
   const byName = new Map(markets.map((m) => [m.name, m]));
   const starred = stars.map((s) => byName.get(s)).filter((m): m is Market => !!m);
   const top = markets
-    .filter((m) => !stars.includes(m.name))
+    .filter((m) => !stars.includes(m.name) && (group === 'crypto') === !m.dex)
     .sort((a, b) => b.vol - a.vol)
     .slice(0, TOP);
 
@@ -47,7 +67,7 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
       <li key={m.name}>
         <button type="button" className="side-row" aria-current={m.name === coin ? 'true' : undefined} onClick={() => onCoin(m.name)}>
           <span className="side-name">
-            {m.name}
+            {label(m.name)}
             {star && <span className="side-star" aria-label="starred">★</span>}
           </span>
           <span className="side-px">{price(px)}</span>
@@ -61,7 +81,11 @@ function MarketList({ markets, coin, onCoin }: { markets: Market[]; coin: string
   return (
     <>
       {starred.length > 0 && <ul className="side-list">{starred.map((m) => row(m, true))}</ul>}
-      {starred.length > 0 && <div className="side-rule" />}
+      <div className="side-groups" role="group" aria-label="Markets">
+        {(['crypto', 'traditional'] as const).map((g) => (
+          <button key={g} type="button" aria-pressed={g === group} onClick={() => setGroup(g)}>{g}</button>
+        ))}
+      </div>
       <ul className="side-list">{top.map((m) => row(m, false))}</ul>
     </>
   );

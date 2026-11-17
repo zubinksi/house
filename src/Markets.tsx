@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LivelinePoint } from 'liveline';
 import { LinenLine } from './LinenLine';
-import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids } from './hl';
+import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, label, dexOf, ISSUER } from './hl';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
 import type { Palette } from './App';
@@ -107,10 +107,13 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
     <section className="detail" aria-labelledby="m-coin">
       <div className="m-head">
         <div className="m-id">
-          <p className="eyebrow">{coin}-USD</p>
+          {/* a HIP-3 market names who lists it */}
+          <p className="eyebrow">
+            {label(coin)}-USD{dexOf(coin) && ` · ${ISSUER[dexOf(coin)] ?? dexOf(coin)}`}
+          </p>
           <div className="m-title">
-            <h1 className="m-coin" id="m-coin">{coin}</h1>
-            <StarButton on={stars.includes(coin)} label={coin} onClick={() => toggleStar('markets', coin)} />
+            <h1 className="m-coin" id="m-coin">{label(coin)}</h1>
+            <StarButton on={stars.includes(coin)} label={label(coin)} onClick={() => toggleStar('markets', coin)} />
           </div>
         </div>
         <button type="button" className="icon-btn" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
@@ -164,6 +167,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal }:
             dark={palette.dark}
             ink={palette.ink}
             thread={palette.thread}
+            filament={palette.filament}
             loading={!data.length && !error}
             formatValue={(v) => '$' + price(v)}
             formatTime={formatTime}
@@ -195,9 +199,9 @@ function Search({ markets, onPick, onClose }: { markets: Market[]; onPick: (c: s
 
   const matches = useMemo(() => {
     const s = q.trim().toUpperCase();
-    const starts = (m: Market) => (s && m.name.toUpperCase().startsWith(s) ? 0 : 1);
+    const starts = (m: Market) => (s && label(m.name).toUpperCase().startsWith(s) ? 0 : 1);
     return markets
-      .filter((m) => !s || m.name.toUpperCase().includes(s))
+      .filter((m) => !s || label(m.name).toUpperCase().includes(s))
       .sort((a, b) => starts(a) - starts(b) || b.vol - a.vol)
       .slice(0, 40);
   }, [q, markets]);
@@ -246,7 +250,10 @@ function Search({ markets, onPick, onClose }: { markets: Market[]; onPick: (c: s
             const chg = m.prev ? (px - m.prev) / m.prev : m.change;
             return (
               <li key={m.name} id={`opt-${i}`} role="option" aria-selected={i === active} onClick={() => onPick(m.name)} onMouseMove={() => setActive(i)}>
-                <span>{m.name}</span>
+                <span>
+                  {label(m.name)}
+                  {m.dex && <span className="r-note">{ISSUER[m.dex] ?? m.dex}</span>}
+                </span>
                 <span className="r-price">{price(px)}</span>
                 <span className={`r-chg ${tone(chg)}`}>{pct(chg)}</span>
               </li>

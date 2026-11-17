@@ -6,7 +6,6 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Mast } from './Mast';
-import { Bulb } from './Bulb';
 import { Sidebar } from './Sidebar';
 import { Markets } from './Markets';
 import { Address } from './Address';
@@ -18,10 +17,11 @@ import { sound } from './weather/sound.js';
 export type Mode = 'sun' | 'moon';
 export type Page = 'markets' | 'address';
 /** The chart's colours in each light: ink for the line, thread for the linen. */
-export interface Palette { dark: boolean; ink: string; thread: string }
+export interface Palette { dark: boolean; ink: string; thread: string; filament: boolean }
 const PALETTES: Record<Mode, Palette> = {
-  sun: { dark: false, ink: '#3a2e24', thread: '#7a6650' },
-  moon: { dark: true, ink: '#ece2cf', thread: '#b59e7c' },
+  sun: { dark: false, ink: '#3a2e24', thread: '#7a6650', filament: false },
+  // at night the line is a filament: warm white, glowing, lighting the linen under it
+  moon: { dark: true, ink: '#ffdca8', thread: '#c29a63', filament: true },
 };
 
 const get = (k: string) => {
@@ -109,7 +109,6 @@ export function App() {
   const palette = PALETTES[mode];
   return (
     <>
-      <Bulb />
       <Mast mode={mode} onTurn={turn} soundOn={soundOn} onSound={toggleSound} />
       <main className="slab">
         <Sidebar page={page} markets={markets} coin={coin} onCoin={setCoin} address={address} onAddress={setAddress} />

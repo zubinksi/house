@@ -72,7 +72,7 @@
 }
 
 /* moonlight mirrors the day: a cool, moonlit slate wall, lighter than the slab,
-   and a warm walnut-dark slab with cream ink, lit by an amber bulb */
+   and a warm walnut-dark slab with cream ink; its charts glow like filament */
 :root[data-mode='moon'] {
   --wall: #283040;
   --mast-ink: #dfe3ea;
@@ -290,6 +290,11 @@ a { color: inherit; }
 .side-star { color: var(--star); font-size: 0.6875rem; margin-left: 0.375rem; }
 .side-px { text-align: right; font-size: 0.75rem; }
 .side-chg { text-align: right; font-size: 0.6875rem; }
+/* crypto or traditional: two words, the chosen one in ink with a cut rule beneath */
+.side-groups { display: flex; gap: 1rem; padding: 0 0.5rem; margin-bottom: -0.5rem; }
+.side-groups button { font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding-bottom: 0.25rem; border-bottom: 1px solid transparent; }
+.side-groups button:hover { color: var(--ink); }
+.side-groups button[aria-pressed='true'] { color: var(--ink); border-bottom-color: var(--accent); }
 .side-rule { height: 1px; background: var(--b1); margin: -0.5rem 0.5rem; } /* the sidebar's gap is spacing enough */
 .side-empty { margin: 0; padding: 0 0.5rem; color: var(--muted); font-size: 0.75rem; }
 
@@ -507,6 +512,7 @@ tbody small { color: var(--muted); margin-left: 0.375rem; font-size: 0.6875rem; 
   .side-row .side-chg { display: none; }
   .side-name { overflow: visible; }
   .side-rule { display: none; }
+  .side-groups { margin-bottom: 0; }
   .detail { padding: 1.5rem 1.25rem 1.75rem; }
   .m-coin { font-size: 2.25rem; }
   .stats-lead dd { font-size: 1.375rem; }
@@ -533,65 +539,6 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   .detail { box-shadow: inset 1px 0 0 var(--catch); }
 }
 
-/* ── The amber bulb (moonlight) ── */
-.bulb {
-  position: absolute;
-  top: 0;
-  left: calc(max(2rem, (100vw - 72rem) / 2) / 2);
-  width: 0;
-  height: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 900ms ease;
-}
-:root[data-mode='moon'] .bulb { opacity: 1; }
-.bulb-hang {
-  position: absolute;
-  top: 0;
-  left: -2.375rem;
-  width: 4.75rem;
-  transform-origin: 50% 0;
-  animation: bulb-sway 9s ease-in-out infinite;
-}
-.bulb-cord { display: block; width: 1px; height: 8rem; margin: 0 auto; background: #0c0d10; }
-.bulb-svg { display: block; width: 4.75rem; height: auto; overflow: visible; filter: drop-shadow(0 0 0.75rem rgba(255, 170, 80, 0.45)); }
-.bulb-filament { animation: bulb-burn 7s ease-in-out infinite; }
-/* the pool of amber light it throws on the wall */
-.bulb-glow {
-  position: absolute;
-  top: 10.5rem;
-  left: -24rem;
-  width: 48rem;
-  height: 40rem;
-  margin-top: -14rem;
-  background: radial-gradient(closest-side, rgba(255, 168, 82, 0.34), rgba(255, 150, 70, 0.12) 45%, transparent);
-  filter: blur(6px);
-}
-/* and on the near corner of the slab */
-:root[data-mode='moon'] .slab {
-  background-image: radial-gradient(48rem 30rem at 0 0, rgba(255, 170, 90, 0.07), transparent 70%);
-}
-:root[data-mode='moon'] .sidebar,
-:root[data-mode='moon'] .side-pages {
-  background-image: radial-gradient(30rem 24rem at 0 0, rgba(255, 170, 90, 0.08), transparent 70%);
-}
-@keyframes bulb-sway {
-  0%, 100% { transform: rotate(-0.6deg); }
-  50% { transform: rotate(0.6deg); }
-}
-@keyframes bulb-burn {
-  0%, 100% { opacity: 1; }
-  40% { opacity: 0.93; }
-  70% { opacity: 0.98; }
-}
-/* only where the margin has room for it; its light stays either way */
-@media (max-width: 1180px) {
-  .bulb-hang { display: none; }
-  .bulb { left: 0; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .switch-knob { transition: none; }
-  .bulb-hang, .bulb-filament { animation: none; }
 }

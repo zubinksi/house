@@ -3,11 +3,13 @@
  * moved, and what it holds. The star keeps the address in the sidebar.
  *
  * Reads clearinghouseState (perps), spotClearinghouseState (spot balances),
- * portfolio (account value and PnL history) and frontendOpenOrders.
+ * portfolio (account value and PnL history) and frontendOpenOrders. Perps and
+ * orders are read on every dex the house shows: each HIP-3 dex (trade.xyz's
+ * stocks and commodities) keeps its own margin account.
  */
 import { useEffect, useRef, useState } from 'react';
 import { LinenLine } from './LinenLine';
-import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, DASH } from './hl';
+import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, label, DEXES, DASH } from './hl';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
 import type { Palette } from './App';
@@ -41,11 +43,16 @@ async function load(addr: string): Promise<Data> {
       liquidationPx: string | null; marginUsed: string; leverage?: { type: string; value: number }; cumFunding?: { sinceOpen: string };
     } }[];
   };
-  const [perp, spot, portfolio, orders, mkts, spotPx, vault] = await Promise.all([
-    info<Perp>({ type: 'clearinghouseState', user: addr }),
+  const empty: Perp = { marginSummary: { accountValue: '0' }, withdrawable: '0', assetPositions: [] };
+  const [perps, spot, portfolio, orderLists, mkts, spotPx, vault] = await Promise.all([
+    Promise.all(DEXES.map((dex) =>
+      info<Perp>({ type: 'clearinghouseState', user: addr, ...(dex && { dex }) }).catch((e) => (dex ? empty : Promise.reject(e))),
+    )),
     info<{ balances: { coin: string; total: string; hold: string; entryNtl: string }[] }>({ type: 'spotClearinghouseState', user: addr }),
     info<[string, History][]>({ type: 'portfolio', user: addr }),
-    info<Order[]>({ type: 'frontendOpenOrders', user: addr }),
+    Promise.all(DEXES.map((dex) =>
+      info<Order[]>({ type: 'frontendOpenOrders', user: addr, ...(dex && { dex }) }).catch((e) => (dex ? [] : Promise.reject(e))),
+    )),
     fetchMarkets().catch(() => []),
     fetchSpotPrices().catch(() => new Map([['USDC', 1]])),
     info<{ name: string } | null>({ type: 'vaultDetails', vaultAddress: addr }).catch(() => null),
@@ -60,13 +67,13 @@ async function load(addr: string): Promise<Data> {
     .sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
   return {
     vault: vault?.name ?? null,
-    perpValue: +perp.marginSummary.accountValue,
-    withdrawable: +perp.withdrawable,
+    perpValue: perps.reduce((sum, p) => sum + +p.marginSummary.accountValue, 0),
+    withdrawable: perps.reduce((sum, p) => sum + +p.withdrawable, 0),
     spotValue: balances.reduce((s, b) => s + (b.value || 0), 0),
     history: Object.fromEntries(portfolio),
-    orders,
+    orders: orderLists.flat().sort((a, b) => b.timestamp - a.timestamp),
     balances,
-    positions: (perp.assetPositions || [])
+    positions: perps.flatMap((p) => p.assetPositions || [])
       .map(({ position: p }) => ({
         coin: p.coin,
         size: +p.szi,
@@ -208,6 +215,7 @@ export function Address({ address, onAddress, palette }: { address: string; onAd
                 dark={palette.dark}
                 ink={palette.ink}
                 thread={palette.thread}
+                filament={palette.filament}
                 live={false}
                 loading={!data}
                 formatValue={(v) => usdShort(v)}
@@ -334,7 +342,7 @@ function Positions({ rows }: { rows: Position[] }) {
         {rows.length ? rows.map((p) => (
           <tr key={p.coin}>
             <th scope="row">
-              {p.coin} <span className={`side ${p.size > 0 ? 'up' : 'down'}`}>{p.size > 0 ? 'long' : 'short'}</span>
+              {label(p.coin)} <span className={`side ${p.size > 0 ? 'up' : 'down'}`}>{p.size > 0 ? 'long' : 'short'}</span>
               <small>{p.leverage}</small>
             </th>
             <td className="num">{size(Math.abs(p.size))}</td>
@@ -392,7 +400,7 @@ function Orders({ rows }: { rows: Order[] }) {
         {rows.length ? rows.map((o, i) => (
           <tr key={i}>
             <td>{new Date(o.timestamp).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
-            <th scope="row">{o.coin}</th>
+            <th scope="row">{label(o.coin)}</th>
             <td className={o.side === 'B' ? 'up' : 'down'}>{o.side === 'B' ? 'buy' : 'sell'} · {(o.orderType || 'limit').toLowerCase()}</td>
             <td className="num">{size(+o.sz)}</td>
             <td className="num">{price(+o.limitPx)}</td>
