@@ -41,6 +41,15 @@ export const dexOf = (name: string) => (name.includes(':') ? name.slice(0, name.
 /** "xyz:TSLA" → "TSLA" */
 export const label = (name: string) => (name.includes(':') ? name.slice(name.indexOf(':') + 1) : name);
 
+/**
+ * What a HIP-3 deployer says about each of its markets (perpConciseAnnotations):
+ * its category ("stocks", "indices", "preipo"…), a display name ("WTIOIL" for
+ * xyz:CL) and search keywords ("anthropic" for xyz:ANT). Kept up to date by
+ * the deployer, so the house never has to keep its own list.
+ */
+export interface Annotation { category?: string; displayName?: string; keywords?: string[] }
+export const annotations = new Map<string, Annotation>();
+
 export interface Market {
   /** the API's name: "HYPE", or "xyz:TSLA" for a HIP-3 market */
   name: string;
@@ -91,6 +100,13 @@ export function fetchMarkets(maxAgeMs = 10000): Promise<Market[]> {
         vol: +c.dayNtlVlm,
       }];
     });
+  // annotations ride along; if they fail, markets still load (uncategorised)
+  const notes = info<[string, Annotation][]>({ type: 'perpConciseAnnotations' })
+    .then((list) => {
+      annotations.clear();
+      for (const [name, a] of list) annotations.set(name, a);
+    })
+    .catch(() => undefined);
   marketsP = Promise.all(
     DEXES.map((dex) =>
       info<Meta>({ type: 'metaAndAssetCtxs', ...(dex && { dex }) })
@@ -99,7 +115,10 @@ export function fetchMarkets(maxAgeMs = 10000): Promise<Market[]> {
         .catch((e) => (dex ? [] : Promise.reject(e))),
     ),
   )
-    .then((lists) => lists.flat())
+    .then(async (lists) => {
+      await notes;
+      return lists.flat();
+    })
     .catch((e) => {
       marketsP = null;
       throw e;

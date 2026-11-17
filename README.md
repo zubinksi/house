@@ -37,11 +37,18 @@ follows the midnight repo's chart page: a live dot, the ticker and its name, the
 price large, the day's move beneath it, ranges (1H to 1Y) in a tray, the live
 chart and the market's numbers. The search icon, or `/`, finds any market.
 
-The sidebar's market list borrows midnight's filtering: chips for all, starred,
-crypto, equities, pre-IPO, commodities and FX, and a sort that cycles volume,
-biggest gain and biggest fall. Starred markets stay on top in the order they were
-starred; the star on each row stars it there and then. trade.xyz doesn't publish
-categories, so they and the plain names live in `src/catalog.ts`, after midnight's.
+The sidebar's market list borrows midnight's filtering: chips for all, starred
+and each category, and a sort that cycles volume, biggest gain and biggest fall.
+Starred markets stay on top in the order they were starred; the star on each row
+stars it there and then.
+
+Categories are automatic. Hyperliquid's API carries each HIP-3 deployer's own
+annotations (`perpConciseAnnotations`): a category (stocks, indices, preipo,
+commodities, fx…), a display name (xyz:CL shows as WTIOIL) and search keywords
+("anthropic" finds ANT). The chips are built from the categories there are, so a
+market that lists or a new category appears without a code change. Markets on
+Hyperliquid's own dex are crypto. Only the plain names shown beside a ticker
+("Apple Inc.") are kept by hand, in `src/catalog.ts`.
 
 **address**: the portfolio behind any address. The header reads "portfolio" or
 "vault · name", with the short address as the title, its star and a copy link;

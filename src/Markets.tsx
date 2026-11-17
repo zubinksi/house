@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LivelinePoint } from 'liveline';
 import { LinenLine } from './LinenLine';
 import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, dexOf, ISSUER } from './hl';
-import { ticker, assetName } from './catalog';
+import { ticker, assetName, keywords } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
 import { MenuButton } from './MenuButton';
@@ -204,7 +204,7 @@ function Search({ markets, onPick, onClose }: { markets: Market[]; onPick: (c: s
     const s = q.trim().toUpperCase();
     const starts = (m: Market) => (s && ticker(m.name).toUpperCase().startsWith(s) ? 0 : 1);
     return markets
-      .filter((m) => !s || ticker(m.name).toUpperCase().includes(s) || assetName(m.name).toUpperCase().includes(s))
+      .filter((m) => !s || ticker(m.name).toUpperCase().includes(s) || assetName(m.name).toUpperCase().includes(s) || keywords(m.name).some((k) => k.toUpperCase().includes(s)))
       .sort((a, b) => starts(a) - starts(b) || b.vol - a.vol)
       .slice(0, 40);
   }, [q, markets]);

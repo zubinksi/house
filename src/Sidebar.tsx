@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import type { Page } from './App';
 import { type Market, price, pct, tone, shortAddr, useMids } from './hl';
-import { FILTERS, type Filter, inFilter, ticker, assetName } from './catalog';
+import { filtersFor, type Filter, inFilter, ticker, assetName, keywords } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { AddressForm } from './Address';
 
@@ -101,6 +101,12 @@ const SORTS: Record<Sort, { next: Sort; title: string }> = {
   losers: { next: 'volume', title: 'Sorted by biggest fall today' },
 };
 
+/** A search matches the ticker, the plain name or the deployer's keywords. */
+const matches = (name: string, q: string) =>
+  ticker(name).toUpperCase().includes(q) ||
+  assetName(name).toUpperCase().includes(q) ||
+  keywords(name).some((k) => k.toUpperCase().includes(q));
+
 const remembered = <T extends string>(key: string, ok: readonly T[], fallback: T): T => {
   try {
     const v = localStorage.getItem(key) as T | null;
@@ -131,7 +137,16 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   /** while searching, the search looks across every market and the filters step aside */
   searching: boolean;
 }) {
-  const [filter, setFilter] = useState<Filter>(() => remembered('house.filter', FILTERS.map((f) => f.key), 'all'));
+  const [chosen, setFilter] = useState<Filter>(() => {
+    try {
+      return localStorage.getItem('house.filter') || 'all';
+    } catch {
+      return 'all';
+    }
+  });
+  // the chips follow the categories there are; a remembered one that's gone falls back to all
+  const filters = filtersFor(markets);
+  const filter = filters.some((f) => f.key === chosen) ? chosen : 'all';
   const [sort, setSort] = useState<Sort>(() => remembered('house.sort', ['volume', 'gainers', 'losers'] as const, 'volume'));
   const stars = useStars('markets');
   const mids = useMids();
@@ -143,7 +158,7 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   // a search looks across every market, whatever the filter
   const q = query.trim().toUpperCase();
   const shown = rows
-    .filter((r) => (q ? ticker(r.m.name).toUpperCase().includes(q) || assetName(r.m.name).toUpperCase().includes(q) : inFilter(filter, r.m, r.star >= 0)))
+    .filter((r) => (q ? matches(r.m.name, q) : inFilter(filter, r.m, r.star >= 0)))
     .sort((a, b) => {
       if ((a.star >= 0) !== (b.star >= 0)) return a.star >= 0 ? -1 : 1;
       if (a.star >= 0) return a.star - b.star;
@@ -156,7 +171,7 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   return (
     <>
       {!searching && <div className="side-filters" role="group" aria-label="Show">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <button
             key={f.key}
             type="button"

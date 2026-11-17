@@ -1,32 +1,34 @@
 /*
  * What each market is: its category, the ticker to show and a plain name.
  *
- * Borrowed from the midnight repo (lib/assets.ts, lib/assetNames.ts): trade.xyz
- * doesn't publish categories through the API, so they're kept here by hand,
- * after docs.trade.xyz/asset-directory. A trade.xyz ticker that isn't listed
- * counts as an equity. Markets on Hyperliquid's own dex are crypto.
+ * Categories, display names and search keywords for HIP-3 markets come from
+ * Hyperliquid's API (perpConciseAnnotations), as set by each deployer, so a
+ * market that changes (SpaceX listing, Anthropic arriving pre-IPO) moves on its
+ * own. Markets on Hyperliquid's own dex are crypto. Only the plain names shown
+ * beside a ticker are kept here by hand (from the midnight repo).
  */
-import { label, type Market } from './hl';
+import { annotations, label, type Market } from './hl';
 
-export type Category = 'crypto' | 'stock' | 'index' | 'commodity' | 'fx' | 'pre-ipo';
+/** A market's category, in the API's words, lower case ("stocks", "preipo"…). */
+export function categoryOf(m: Pick<Market, 'name' | 'dex'>): string {
+  if (!m.dex) return 'crypto';
+  const c = annotations.get(m.name)?.category?.toLowerCase();
+  if (!c) return 'other';
+  return c === 'stock' ? 'stocks' : c;
+}
 
-const INDICES = new Set(['XYZ100', 'SP500', 'JP225', 'KR200', 'EWY', 'EWJ', 'USAR', 'XLE', 'EWZ', 'VIX']);
-const COMMODITIES = new Set([
-  'GOLD', 'SILVER', 'PLATINUM', 'PALLADIUM', 'COPPER', 'ALUMINIUM', 'WTIOIL', 'BRENTOIL', 'CL',
-  'NATGAS', 'TTF', 'URANIUM', 'URNM', 'CORN', 'WHEAT',
-]);
-const FX = new Set(['JPY', 'EUR', 'DXY']);
-const PRE_IPO = new Set(['SPCX']);
+/** The ticker to show: the deployer's display name ("xyz:CL" → "WTIOIL"), else the API's. */
+export const ticker = (name: string) => annotations.get(name)?.displayName ?? label(name);
 
-/** Tickers shown under another name (the API name stays for every request). */
-const RENAMES: Record<string, string> = { CL: 'WTIOIL' };
+/** Words a search should also match ("anthropic" for ANT, "nasdaq" for XYZ100). */
+export const keywords = (name: string) => annotations.get(name)?.keywords ?? [];
 
 const NAMES: Record<string, string> = {
   // US equities
   AAPL: 'Apple Inc.', AMZN: 'Amazon.com', AMD: 'AMD', COIN: 'Coinbase', CRCL: 'Circle Internet',
   GOOGL: 'Alphabet Inc.', HOOD: 'Robinhood', INTC: 'Intel', META: 'Meta Platforms', MSFT: 'Microsoft',
   MSTR: 'Strategy', MU: 'Micron Technology', NFLX: 'Netflix', NVDA: 'NVIDIA', ORCL: 'Oracle',
-  PLTR: 'Palantir', RIVN: 'Rivian', SNDK: 'SanDisk', TSLA: 'Tesla',
+  PLTR: 'Palantir', RIVN: 'Rivian', SNDK: 'SanDisk', TSLA: 'Tesla', SPCX: 'SpaceX', ANT: 'Anthropic',
   // Korean equities
   SMSN: 'Samsung Electronics', SKHX: 'SK Hynix', HYUNDAI: 'Hyundai Motor',
   // ETFs and indices
@@ -37,47 +39,47 @@ const NAMES: Record<string, string> = {
   WTIOIL: 'Crude Oil', CL: 'Crude Oil', BRENTOIL: 'Brent Crude Oil', NATGAS: 'Natural Gas', URNM: 'Uranium',
   // FX
   JPY: 'Japanese Yen', EUR: 'Euro',
-  // Pre-IPO
-  SPCX: 'SpaceX',
   // Crypto
   ZEC: 'ZCash', BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', BNB: 'BNB', XRP: 'XRP', DOGE: 'Dogecoin',
   AVAX: 'Avalanche', LINK: 'Chainlink', ADA: 'Cardano', SUI: 'Sui', HYPE: 'Hyperliquid', TON: 'Toncoin',
   ARB: 'Arbitrum',
 };
 
-export function categoryOf(m: Pick<Market, 'name' | 'dex'>): Category {
-  if (!m.dex) return 'crypto';
-  const t = label(m.name);
-  if (INDICES.has(t)) return 'index';
-  if (COMMODITIES.has(t)) return 'commodity';
-  if (FX.has(t)) return 'fx';
-  if (PRE_IPO.has(t)) return 'pre-ipo';
-  return 'stock';
-}
-
-/** The ticker to show: "xyz:CL" → "WTIOIL". */
-export const ticker = (name: string) => RENAMES[label(name)] ?? label(name);
-
 /** A plain name where one is known ("Apple Inc."), else empty. */
 export const assetName = (name: string) => NAMES[label(name)] ?? '';
 
-/* ── The sidebar's filters, as midnight has them ── */
-export type Filter = 'all' | 'starred' | 'crypto' | 'equities' | 'pre-ipo' | 'commodity' | 'fx';
+/* ── The sidebar's filters ── */
+export type Filter = string; // 'all', 'starred', or a category
 
-export const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'ALL' },
-  { key: 'starred', label: '★' },
-  { key: 'crypto', label: 'CRYPTO' },
-  { key: 'equities', label: 'EQUITIES' },
-  { key: 'pre-ipo', label: 'PRE IPO' },
-  { key: 'commodity', label: 'COMMODITIES' },
-  { key: 'fx', label: 'FX' },
+/** Known categories in the order their chips appear, with their labels. */
+const CATEGORY_LABELS: [string, string][] = [
+  ['crypto', 'CRYPTO'],
+  ['stocks', 'EQUITIES'],
+  ['indices', 'INDICES'],
+  ['preipo', 'PRE IPO'],
+  ['commodities', 'COMMODITIES'],
+  ['fx', 'FX'],
 ];
+
+/**
+ * The chips for the markets there are: all, starred, then each category that
+ * has a market, known ones first in a fixed order, any new one after by its own
+ * name. A category with nothing in it shows no chip.
+ */
+export function filtersFor(markets: Market[]): { key: Filter; label: string }[] {
+  const present = new Set(markets.map(categoryOf));
+  const known = CATEGORY_LABELS.filter(([k]) => present.has(k));
+  const others = [...present].filter((c) => !CATEGORY_LABELS.some(([k]) => k === c)).sort();
+  return [
+    { key: 'all', label: 'ALL' },
+    { key: 'starred', label: '★' },
+    ...known.map(([key, label]) => ({ key, label })),
+    ...others.map((c) => ({ key: c, label: c === 'preipo' ? 'PRE IPO' : c.toUpperCase() })),
+  ];
+}
 
 export function inFilter(filter: Filter, m: Market, starred: boolean): boolean {
   if (filter === 'all') return true;
   if (filter === 'starred') return starred;
-  const c = categoryOf(m);
-  if (filter === 'equities') return c === 'stock' || c === 'index';
-  return c === filter;
+  return categoryOf(m) === filter;
 }
