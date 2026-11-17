@@ -61,6 +61,8 @@ const sun = {
   blend: 'screen',
   blur: 3,
   scale: 0.35,
+  // the sway, clouds and flutter run at this fraction of real time
+  speed: 0.6,
   shade: '#000000',
   light: '#8f7b59',
   // starts below the masthead, so the light never washes out its white text
@@ -234,7 +236,7 @@ function fit() {
 function draw() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
-  cur.frame(ctx, canvas.width, canvas.height, t);
+  cur.frame(ctx, canvas.width, canvas.height, t * (cur.speed ?? 1));
   drawPaper();
 }
 
