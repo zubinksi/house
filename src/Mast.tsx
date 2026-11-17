@@ -6,11 +6,13 @@ import { useEffect, useState } from 'react';
 import iris from './assets/iris-white.png';
 import type { Mode } from './App';
 
-export function Mast({ mode, onTurn, soundOn, onSound }: {
+export function Mast({ mode, onTurn, soundOn, onSound, paperLight, onPaperLight }: {
   mode: Mode;
   onTurn: () => void;
   soundOn: boolean;
   onSound: () => void;
+  paperLight: boolean;
+  onPaperLight: () => void;
 }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -29,6 +31,10 @@ export function Mast({ mode, onTurn, soundOn, onSound }: {
 
       <div className="mast-right">
         <span className="mast-note">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        {/* prototype: the window's light on the slab as well as the wall */}
+        <button type="button" className="mast-text" aria-pressed={paperLight} onClick={onPaperLight} title="Light on the slab (L)">
+          {paperLight ? 'paper light on' : 'paper light off'}
+        </button>
         <button type="button" className="mast-text" aria-pressed={soundOn} onClick={onSound} title="Sound (A)">
           {soundOn ? 'sound on' : 'sound off'}
         </button>

@@ -219,7 +219,7 @@ const moon = {
 const scenes = { sun, moon };
 const PAD = 48; // canvas overhangs the viewport so the blur has no soft edges
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-let canvas, ctx, cur = null, t = 0, last = 0, raf = 0, swap = 0;
+let canvas, ctx, cur = null, curName = '', t = 0, last = 0, raf = 0, swap = 0;
 
 function fit() {
   const W = Math.ceil((window.innerWidth + PAD * 2) * cur.scale);
@@ -235,6 +235,62 @@ function draw() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1;
   cur.frame(ctx, canvas.width, canvas.height, t);
+  drawPaper();
+}
+
+/* ── The same light, falling faintly across the slab (prototype) ──
+ * A second canvas, clipped to the slab's outline, carries a softened copy of
+ * the wall's light. By day it multiplies onto the paper: the paper's own light
+ * warm shade where the window's light doesn't reach, warm white where it does,
+ * so text never sits in real shadow. By night the blinds' light is screened on
+ * faintly. It is blurred more than the wall, as light on a sheet is. */
+const PAPER = {
+  sun: { blend: 'multiply', shade: '#ddd3c3', gain: 2, blur: 6, opacity: 0.6 },
+  moon: { blend: 'screen', blur: 10, opacity: 0.65 },
+};
+let paper = null, pctx = null, slab = null, paperOn = true, shown = false, lastClip = '';
+
+function clipToSlab() {
+  if (!paper || !slab) return;
+  const r = slab.getBoundingClientRect();
+  const box = paper.getBoundingClientRect();
+  const clip = `inset(${r.top - box.top}px ${box.right - r.right}px ${box.bottom - r.bottom}px ${r.left - box.left}px round 3px)`;
+  if (clip !== lastClip) {
+    paper.style.clipPath = clip;
+    lastClip = clip;
+  }
+}
+
+function paperOpacity() {
+  if (!paper) return;
+  paper.style.opacity = paperOn && shown && cur ? String(PAPER[curName].opacity) : '0';
+}
+
+function drawPaper() {
+  if (!paper || !paperOn || !cur) return;
+  slab = slab && slab.isConnected ? slab : document.querySelector('.slab');
+  const p = PAPER[curName];
+  const W = canvas.width, H = canvas.height;
+  if (paper.width !== W || paper.height !== H) {
+    paper.width = W;
+    paper.height = H;
+  }
+  pctx.setTransform(1, 0, 0, 1, 0, 0);
+  pctx.globalAlpha = 1;
+  pctx.globalCompositeOperation = 'source-over';
+  if (p.shade) {
+    pctx.fillStyle = p.shade;
+    pctx.fillRect(0, 0, W, H);
+    pctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < p.gain; i++) pctx.drawImage(canvas, 0, 0);
+    pctx.globalCompositeOperation = 'source-over';
+  } else {
+    pctx.clearRect(0, 0, W, H);
+    pctx.drawImage(canvas, 0, 0);
+  }
+  paper.style.mixBlendMode = p.blend;
+  paper.style.filter = `blur(${p.blur}px)`;
+  clipToSlab();
 }
 
 function loop(now) {
@@ -248,6 +304,7 @@ function loop(now) {
 
 function apply(name) {
   cur = scenes[name];
+  curName = name;
   canvas.width = 0;
   fit();
   canvas.style.mixBlendMode = cur.blend;
@@ -272,6 +329,8 @@ export const light = {
       fit();
       draw();
     });
+    // the slab moves with the page on a phone; its light goes with it
+    window.addEventListener('scroll', clipToSlab, { passive: true });
     reduce.addEventListener?.('change', start);
   },
   set(name) {
@@ -280,13 +339,30 @@ export const light = {
     if (!cur) {
       apply(name);
       canvas.style.opacity = '1';
+      shown = true;
+      paperOpacity();
       start();
       return;
     }
     canvas.style.opacity = '0';
+    shown = false;
+    paperOpacity();
     swap = setTimeout(() => {
       apply(name);
       canvas.style.opacity = '1';
+      shown = true;
+      paperOpacity();
     }, 650);
+  },
+  /** The canvas that carries the light across the slab. */
+  mountPaper(el) {
+    paper = el;
+    pctx = paper.getContext('2d');
+  },
+  /** Light on the slab, on or off. */
+  paper(on) {
+    paperOn = on;
+    paperOpacity();
+    if (on && cur) draw();
   },
 };

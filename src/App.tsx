@@ -52,6 +52,8 @@ export function App() {
   const [coin, setCoinState] = useState(() => get('house.coin') || 'HYPE');
   const [address, setAddressState] = useState(() => get('house.address') || '');
   const [soundOn, setSoundOn] = useState(false);
+  // prototype: the window's light falling faintly across the slab too
+  const [paperLight, setPaperLight] = useState(() => get('house.paperLight') !== 'off');
   const [searchSignal, setSearchSignal] = useState(0);
   // phones: the sidebar is a menu laid over the page, opened from its icon
   const [menu, setMenu] = useState(false);
@@ -90,7 +92,12 @@ export function App() {
   // the light on the wall, the sound outside, and the page's colours
   useEffect(() => {
     light.mount(document.getElementById('light'));
+    light.mountPaper(document.getElementById('paper-light'));
   }, []);
+  useEffect(() => {
+    light.paper(paperLight);
+    put('house.paperLight', paperLight ? 'on' : 'off');
+  }, [paperLight]);
   useEffect(() => {
     document.documentElement.dataset.mode = mode;
     light.set(mode);
@@ -113,6 +120,7 @@ export function App() {
       else if (k === 'm') setMode('moon');
       else if (k === 't') turn();
       else if (k === 'a') toggleSound();
+      else if (k === 'l') setPaperLight((v) => !v);
       else if (k === '/') {
         e.preventDefault();
         if (page !== 'markets') location.hash = 'markets';
@@ -126,7 +134,14 @@ export function App() {
   const palette = PALETTES[mode];
   return (
     <>
-      <Mast mode={mode} onTurn={turn} soundOn={soundOn} onSound={toggleSound} />
+      <Mast
+        mode={mode}
+        onTurn={turn}
+        soundOn={soundOn}
+        onSound={toggleSound}
+        paperLight={paperLight}
+        onPaperLight={() => setPaperLight((v) => !v)}
+      />
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
         <Sidebar
           page={page}

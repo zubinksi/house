@@ -143,6 +143,20 @@ a { color: inherit; }
   transition: opacity 650ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 #root { position: relative; z-index: 1; }
+/* the light across the slab: over the slab's paper, clipped to its outline */
+#paper-light {
+  position: fixed;
+  top: -48px;
+  left: -48px;
+  width: calc(100vw + 96px);
+  height: calc(100vh + 96px);
+  height: calc(100lvh + 96px);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  clip-path: inset(50%);
+  transition: opacity 650ms cubic-bezier(0.23, 1, 0.32, 1);
+}
 
 /* ── On the wall ── */
 .mast {
