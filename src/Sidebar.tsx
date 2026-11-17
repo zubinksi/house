@@ -4,7 +4,7 @@
  * crypto and traditional (trade.xyz's HIP-3 markets), with live prices.
  * Address: the starred addresses.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Page } from './App';
 import { type Market, price, pct, tone, shortAddr, useMids } from './hl';
 import { filtersFor, type Filter, inFilter, ticker, assetName, keywords } from './catalog';
@@ -147,6 +147,18 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   // the chips follow the categories there are; a remembered one that's gone falls back to all
   const filters = filtersFor(markets);
   const filter = filters.some((f) => f.key === chosen) ? chosen : 'all';
+  // keep the chosen chip in view in the scrolling row
+  const chips = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = chips.current;
+    const on = row?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (row && on) {
+      const left = on.offsetLeft - row.offsetLeft;
+      if (left < row.scrollLeft || left + on.offsetWidth > row.scrollLeft + row.clientWidth) {
+        row.scrollTo({ left: left - row.clientWidth / 2 + on.offsetWidth / 2, behavior: 'smooth' });
+      }
+    }
+  }, [filter, filters.length]);
   const [sort, setSort] = useState<Sort>(() => remembered('house.sort', ['volume', 'gainers', 'losers'] as const, 'volume'));
   const stars = useStars('markets');
   const mids = useMids();
@@ -170,7 +182,7 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   if (!markets.length) return <p className="side-empty">Loading markets…</p>;
   return (
     <>
-      {!searching && <div className="side-filters" role="group" aria-label="Show">
+      {!searching && <div className="side-filters" role="group" aria-label="Show" ref={chips}>
         {filters.map((f) => (
           <button
             key={f.key}
