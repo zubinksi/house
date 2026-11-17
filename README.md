@@ -2,9 +2,12 @@
 
 A home for Hyperliquid data.
 
-A slab on a wall. The light outside falls on the wall: by day, warm sun through
-leaves across the home repo's grey wall; at night, moonlight through blinds. The slab is cream paper by day and a dark
-board by night, with ink to match. Nothing is drawn to look like wood or brick;
+A slab on a wall. By day, warm sun falls through leaves across the home repo's
+grey wall, and the slab is cream paper. At night, moonlight comes through blinds
+onto a slate wall, the slab turns warm walnut-dark with cream ink, and an amber
+Edison bulb hangs in the margin, its light pooling on the wall and the slab's
+corner. As in the home repo, type is pressed into the slab and rules are cut into
+it, lit from the upper left. Nothing is drawn to look like wood or brick;
 the feeling of home comes from light, sound, paper and time of day.
 
 The paper, ink, fonts, iris, linen and bronze switch come from the `home` repo

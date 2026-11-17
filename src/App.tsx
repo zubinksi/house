@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Mast } from './Mast';
+import { Bulb } from './Bulb';
 import { Sidebar } from './Sidebar';
 import { Markets } from './Markets';
 import { Address } from './Address';
@@ -20,7 +21,7 @@ export type Page = 'markets' | 'address';
 export interface Palette { dark: boolean; ink: string; thread: string }
 const PALETTES: Record<Mode, Palette> = {
   sun: { dark: false, ink: '#3a2e24', thread: '#7a6650' },
-  moon: { dark: true, ink: '#e6dfd0', thread: '#b3a68c' },
+  moon: { dark: true, ink: '#ece2cf', thread: '#b59e7c' },
 };
 
 const get = (k: string) => {
@@ -108,6 +109,7 @@ export function App() {
   const palette = PALETTES[mode];
   return (
     <>
+      <Bulb />
       <Mast mode={mode} onTurn={turn} soundOn={soundOn} onSound={toggleSound} />
       <main className="slab">
         <Sidebar page={page} markets={markets} coin={coin} onCoin={setCoin} address={address} onAddress={setAddress} />
