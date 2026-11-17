@@ -1,69 +1,74 @@
-# house
+# Home Office
 
 A home for Hyperliquid data.
 
-A paper slab on a wall. The weather outside sets the light on the wall: sun
-through leaves, moonlight through blinds, rain sliding down the glass. The slab
-stays paper, the way a sheet on a desk does. Nothing is drawn to look like wood or
-brick; the feeling of home comes from light, sound, paper and time of day.
+A slab on a wall. The light outside falls on the wall: sun through leaves by
+day, moonlight through blinds at night. The slab is cream paper by day and a dark
+board by night, with ink to match. Nothing is drawn to look like wood or brick;
+the feeling of home comes from light, sound, paper and time of day.
 
-The paper, ink, fonts, linen chart and bronze switch come from the `home` repo
+The paper, ink, fonts, iris, linen and bronze switch come from the `home` repo
 (`zubinksi/home`).
 
 ## Run it
 
-A static site with no build step and no dependencies. Open `index.html` in a
-browser, or serve the folder:
-
 ```sh
-npx serve .
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # static site in dist/
 ```
 
-## Rooms
+Vite + React + TypeScript, like `home`. There is no server: the browser reads
+Hyperliquid's public API directly.
 
-**markets** — one perp market at a time, HYPE by default: price, change today,
-a linen price chart (1D, 1W, 1M, 1Y; drag or hover to read any point), oracle
-price, 24h volume, open interest and funding. The search icon, or `/`, switches
-market. The chosen market and range are remembered on the device.
+## Pages
 
-**address** — the portfolio behind any address: account value, PnL and volume for
-the period, perps equity, spot value, withdrawable; an account value or PnL chart
-(1D, 1W, 1M, All); and positions, spot balances and open orders. The last address
-is remembered on the device.
+The sidebar holds the two pages side by side, with the list for the open page
+beneath them.
 
-Both read Hyperliquid's public info API (`POST https://api.hyperliquid.xyz/info`),
-no key needed: `metaAndAssetCtxs`, `candleSnapshot`, `clearinghouseState`,
-`spotClearinghouseState`, `spotMetaAndAssetCtxs`, `portfolio` and
-`frontendOpenOrders`. If the API can't be reached, markets shows labelled sample
-data.
+**markets**: one perp market at a time, HYPE by default. Its live price, the change
+today, a live chart (1H, 1D, 1W, 1M, 1Y) and the market's numbers. The star keeps a
+market at the top of the sidebar's list, above the 25 busiest by 24h volume. The
+search icon, or `/`, finds any market.
 
-## Weather
+**address**: the portfolio behind any address. Account value, PnL and volume for
+the period, an account value or PnL chart (1D, 1W, 1M, All), and positions, spot
+balances and open orders. The star keeps an address in the sidebar.
 
-| Control | Mode | Light on the wall | Sound |
-| --- | --- | --- | --- |
-| switch, `S` | sunlight | warm window light, leaf shadows swaying, clouds passing | wind, leaves, birds |
-| switch, `M` | moonlight | cool light through blinds, a curtain edge in a draft | low wind, crickets |
-| rain, `R` | rain | soft window light, drops clinging and sliding down the glass | rain, drips |
-| sound, `A` | | | on / off |
+Stars, the open market, range and address are remembered on the device.
+
+## Charts: liveline in linen
+
+Charts use [liveline](https://github.com/benjitaylor/liveline) (MIT), a
+canvas-drawn real-time line for React. Prices stream in over Hyperliquid's
+WebSocket (`allMids`) and extend the line as they arrive.
+
+`src/LinenLine.tsx` dresses it in the house style. Liveline has no hook for its
+area fill, so the adapter wraps the chart canvas's 2D context:
+- It swaps the one vertical gradient Liveline makes for the fill under the curve
+  for the home repo's linen weave, clipped to the same curve.
+- It sets Liveline's fonts to Geist Mono.
+- CSS gives the badge paper-coloured text on its ink pill.
+
+This depends on how Liveline 0.0.7 draws, so the package is pinned to that exact
+version. Check the linen after any upgrade. If the adapter stops matching, the
+chart still works with Liveline's own gradient.
+
+## Light and sound
+
+| Control | Light on the wall | Sound |
+| --- | --- | --- |
+| switch / `S` | sunlight: a warm window, leaf shadows swaying, clouds passing | wind, leaves, birds |
+| switch / `M` | moonlight: cool light through blinds, a curtain edge in a draft | low wind, crickets |
+| sound / `A` | | on / off |
 
 `T` turns the switch. On a first visit the house follows the visitor's clock
-(sunlight 6am–7pm, moonlight after); a chosen mode is remembered.
+(sunlight 6am–7pm). The light and sound are generated in code
+(`src/weather/`), so there are no media files.
 
-The light and sound are generated in code, so there are no media files. Each light
-is a low-resolution canvas, blurred with CSS and blended over the wall behind the
-slab. Colours are registered with `@property` so the page fades between modes.
+## Data
 
-## Files
-
-```
-index.html        the wall, the slab, both rooms
-css/house.css     tokens per mode, slab, chart, switch
-fonts/            Geist Serif and Geist Mono (SIL OFL, see fonts/OFL.txt)
-js/light.js       the light on the wall
-js/sound.js       ambient sound (Web Audio)
-js/hl.js          Hyperliquid API and number formats
-js/chart.js       linen chart (ported from home's Chart.tsx)
-js/markets.js     markets room
-js/address.js     address room
-js/main.js        weather, switch, pages, keys
-```
+Hyperliquid's public info API (`POST https://api.hyperliquid.xyz/info`, no key):
+`metaAndAssetCtxs`, `candleSnapshot`, `clearinghouseState`,
+`spotClearinghouseState`, `spotMetaAndAssetCtxs`, `portfolio`,
+`frontendOpenOrders`; and `wss://api.hyperliquid.xyz/ws` for `allMids`.
