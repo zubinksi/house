@@ -814,7 +814,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     position: relative;
     max-width: 75rem;
     margin-inline: max(1.5rem, calc((100vw - 75rem) / 2));
-    padding: 1rem 1rem 0;
+    padding: 0 1rem;
     border-radius: 1.375rem;
     background: var(--enamel); /* one even colour; the edges carry the light */
     box-shadow:
@@ -828,7 +828,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   .panel .slab {
     margin-inline: 0;
     max-width: none;
-    height: clamp(20rem, 100vh - 11.25rem, 46rem);
+    height: clamp(20rem, 100vh - 13.25rem, 46rem);
     border-radius: 0.5rem;
     background-color: var(--slab);
     -webkit-backdrop-filter: none;
@@ -865,6 +865,11 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     transform: translate(-50%, -50%);
   }
   .panel-side { display: flex; align-items: center; gap: 1.25rem; }
+  /* the iris on the bezel above the screen, as on the phone */
+  .panel-top { display: grid; place-items: center; height: 3.25rem; }
+  .panel-top .panel-mark { width: 1.75rem; }
+  .panel-top .panel-mark { position: static; transform: none; }
+  .panel-strip .panel-mark { display: none; }
   /* the hardware takes over from the screen's own range buttons */
   .screen-ranges,
   .screen-periods { display: none !important; }
