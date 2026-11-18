@@ -394,7 +394,7 @@ a { color: inherit; }
   /* the market page fits without scrolling: the chart takes whatever height
      is left after the price and the stats, down to a floor */
   .m-chart { flex: 1 1 0; min-height: 11.5rem; } /* the ranges and a chart of at least ~9rem */
-  .m-detail .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  .m-detail .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
   /* a short window: a smaller price and tighter spacing leave the chart room */
   @media (max-height: 700px) {
     .m-detail { gap: 1.125rem; padding-block: 1.25rem 1.5rem; }
@@ -954,4 +954,16 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   /* the hardware takes over from the screen's own range buttons */
   .screen-ranges, .screen-periods { display: none !important; }
   .m-chart .module-head { display: none; }
+}
+
+/* phones: the market's three stats on one row */
+@media (max-width: 760px) {
+  /* the market page fills the screen; the chart takes what's left */
+  .panel .slab { display: flex; flex-direction: column; }
+  .panel .slab > .detail { flex: 1 0 auto; }
+  .m-chart { flex: 1 1 0; min-height: 10rem; }
+  .m-detail .chart-box-tall { flex: 1 1 0; height: auto; min-height: 0; max-height: 22rem; }
+  .m-detail .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; padding-top: 1rem; }
+  .m-detail .stats dt { font-size: 0.625rem; letter-spacing: 0.08em; white-space: nowrap; }
+  .m-detail .stats dd { font-size: 0.875rem; white-space: nowrap; }
 }

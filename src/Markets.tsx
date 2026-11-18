@@ -194,7 +194,6 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu, range, 
         <div><dt>24h volume</dt><dd>{usdShort(m?.vol)}</dd></div>
         <div><dt>open interest</dt><dd>{usdShort(m?.oi)}</dd></div>
         <div><dt>funding / 1h</dt><dd className={tone(m?.funding)}>{pct(m?.funding, 4)}</dd></div>
-        <div><dt>funding / yr</dt><dd className={tone(m?.funding)}>{m ? pct(m.funding * 24 * 365, 1) : '—'}</dd></div>
       </dl>
     </section>
   );
