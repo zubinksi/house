@@ -754,9 +754,6 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --enamel: #e4ddcf;
   --enamel-lo: #d5ccba;
   --enamel-ink: #8a7f6c;
-  /* the hardware's one accent, the home repo's iris burgundy: used only off
-     the screen, for identity (the iris) and state (the chosen key) */
-  --burgundy: #8d4041;
   --key-hi: #f3eee4;
   --key-lo: #e2dacb;
   --key-side: #bdb29d;
@@ -771,7 +768,6 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --enamel: #443e38;
   --enamel-lo: #3a3530;
   --enamel-ink: #9a8e7f;
-  --burgundy: #b65a59; /* lifted a step so it holds on the dark enamel */
   --key-hi: #554e46;
   --key-lo: #48423b;
   --key-side: #2c2823;
@@ -813,7 +809,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
 .hw-key:active,
 .hw-key[aria-pressed='true'] {
   transform: translateY(1px);
-  color: var(--burgundy);
+  color: var(--ink);
   background: linear-gradient(180deg, var(--key-lo), var(--key-hi));
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28), 0 0 0 var(--key-side);
 }
@@ -978,6 +974,3 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   .m-detail .stats dt { font-size: 0.625rem; letter-spacing: 0.08em; white-space: nowrap; }
   .m-detail .stats dd { font-size: 0.875rem; white-space: nowrap; }
 }
-
-/* the iris on the bezel, pressed into the enamel in burgundy */
-.panel-top .panel-mark { background: var(--burgundy) !important; opacity: 0.9 !important; }
