@@ -771,6 +771,43 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --gasket: #141210;
 }
 .panel-strip { display: none; }
+.panel-top { display: none; }
+/* push keys in a shallow tray; a chosen key stays pressed in */
+.panel-keys {
+  display: flex;
+  gap: 0.4375rem;
+  padding: 0.375rem;
+  border-radius: 0.5625rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.hw-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 3rem;
+  height: 2.25rem;
+  padding: 0 0.625rem;
+  border-radius: 0.4375rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--ink3);
+  background: linear-gradient(180deg, var(--key-hi), var(--key-lo));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 2px 0 var(--key-side),
+    0 3px 5px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+  transition: transform 0.08s, box-shadow 0.08s, color 0.15s;
+}
+.hw-key:hover { color: var(--ink); }
+.hw-key:active,
+.hw-key[aria-pressed='true'] {
+  transform: translateY(1px);
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--key-lo), var(--key-hi));
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28), 0 0 0 var(--key-side);
+}
+
 
 @media (min-width: 761px) {
   .panel {
@@ -828,42 +865,6 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     transform: translate(-50%, -50%);
   }
   .panel-side { display: flex; align-items: center; gap: 1.25rem; }
-  /* push keys in a shallow tray; a chosen key stays pressed in */
-  .panel-keys {
-    display: flex;
-    gap: 0.4375rem;
-    padding: 0.375rem;
-    border-radius: 0.5625rem;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.35);
-  }
-  .hw-key {
-    display: inline-grid;
-    place-items: center;
-    min-width: 3rem;
-    height: 2.25rem;
-    padding: 0 0.625rem;
-    border-radius: 0.4375rem;
-    font-size: 0.8125rem;
-    letter-spacing: 0.08em;
-    text-align: center;
-    color: var(--ink3);
-    background: linear-gradient(180deg, var(--key-hi), var(--key-lo));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 2px 0 var(--key-side),
-      0 3px 5px rgba(0, 0, 0, 0.18);
-    transform: translateY(-1px);
-    transition: transform 0.08s, box-shadow 0.08s, color 0.15s;
-  }
-  .hw-key:hover { color: var(--ink); }
-  .hw-key:active,
-  .hw-key[aria-pressed='true'] {
-    transform: translateY(1px);
-    color: var(--ink);
-    background: linear-gradient(180deg, var(--key-lo), var(--key-hi));
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28), 0 0 0 var(--key-side);
-  }
-
   /* the hardware takes over from the screen's own range buttons */
   .screen-ranges,
   .screen-periods { display: none !important; }
@@ -876,4 +877,76 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
 }
 @media (min-width: 761px) and (prefers-reduced-motion: reduce) {
   .mast-switch, .hw-key { transition: none; }
+}
+
+/* the keys sit unlit while there's no chart (phones, menu open) */
+.panel-keys[data-dim] .hw-key { opacity: 0.45; }
+.panel-keys[data-dim] .hw-key[aria-pressed='true'] { opacity: 0.6; }
+
+/* ── The wall panel on a phone: an intercom by the door ──
+ * The same enamel object, upright and filling the screen: the iris on the bezel
+ * above the screen, the screen scrolling inside it, and the strip (light switch
+ * left, range keys right) at the bottom within reach of a thumb. */
+@media (max-width: 760px) {
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { padding: 0; }
+  .mast { display: none; }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin: calc(0.5rem + env(safe-area-inset-top, 0px)) max(0.5rem, env(safe-area-inset-right, 0px)) calc(0.5rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left, 0px));
+    padding: 0 0.5rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(180deg, var(--enamel-hi), var(--enamel) 35%, var(--enamel-lo));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 1.25rem 2.5rem -0.75rem rgba(30, 22, 12, 0.38);
+  }
+  .panel-top { display: grid; place-items: center; flex: none; height: 2.75rem; }
+  .panel-top .panel-mark {
+    width: 1.625rem;
+    aspect-ratio: 256 / 233;
+    background: var(--enamel-ink);
+    opacity: 0.55;
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
+  }
+  /* the screen: set in behind a thin gasket, scrolling inside the panel */
+  .panel .slab {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0.625rem;
+    background-color: var(--slab);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 0 0 2px var(--gasket), 0 0 0 3px rgba(255, 255, 255, 0.3);
+  }
+  .panel .slab.is-menu .sidebar { min-height: 100%; }
+  /* the strip: switch on the left, keys on the right */
+  .panel-strip {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    height: 4.25rem;
+    padding: 0 0.125rem;
+  }
+  .panel-strip .panel-mark { display: none; }
+  .panel-side { display: flex; align-items: center; }
+  .panel .mast-switch { transform: scale(1.15); transform-origin: left center; }
+  .panel-keys { gap: 0.3125rem; padding: 0.3125rem; }
+  .hw-key { min-width: 2.625rem; height: 2.25rem; padding: 0 0.375rem; font-size: 0.75rem; }
+  /* the hardware takes over from the screen's own range buttons */
+  .screen-ranges, .screen-periods { display: none !important; }
+  .m-chart .module-head { display: none; }
 }

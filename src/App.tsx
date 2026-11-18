@@ -9,7 +9,7 @@ import { Mast } from './Mast';
 import { Sidebar } from './Sidebar';
 import { Markets, RANGES, type Range } from './Markets';
 import { Address, PERIODS, type Period } from './Address';
-import { Panel } from './Panel';
+import { Panel, PanelTop } from './Panel';
 import { useMarkets } from './hl';
 // plain-JS engines carried over from the first version
 import { light } from './weather/light.js';
@@ -148,6 +148,7 @@ export function App() {
       />
       {/* the wall panel: the slab is its screen, its hardware beneath (desktop) */}
       <div className="panel">
+      <PanelTop />
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
         <Sidebar
           page={page}
@@ -174,7 +175,13 @@ export function App() {
       <Panel
         keys={page === 'markets' ? (Object.keys(RANGES) as Range[]) : (Object.keys(PERIODS) as Period[])}
         active={page === 'markets' ? range : period}
-        onKey={(k) => (page === 'markets' ? setRange(k as Range) : setPeriod(k as Period))}
+        onKey={(k) => {
+          // with the menu open, a key also brings the chart back
+          closeMenu();
+          if (page === 'markets') setRange(k as Range);
+          else setPeriod(k as Period);
+        }}
+        dim={menu}
         moon={mode === 'moon'}
         onTurn={turn}
       />

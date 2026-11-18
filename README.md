@@ -21,7 +21,9 @@ speaker: a woven grille and a brass volume knob (turn it to set the room's sound
 press it to switch sound on or off). The iris sits at the centre. On the right,
 push keys set the chart's range (or the address's period) and stay pressed in, a
 star key keeps the open market or address, and the sun/moon switch turns the
-light. Phones show the screen alone.
+light. On a phone the same panel stands upright, like an intercom by the door:
+the iris on the bezel above the screen, the screen scrolling inside it, and the
+switch and range keys at the bottom (unlit while the menu is open).
 
 The paper, ink, fonts, iris, linen and bronze switch come from the `home` repo
 (`zubinksi/home`).
