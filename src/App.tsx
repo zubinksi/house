@@ -82,6 +82,23 @@ export function App() {
   }, []);
   const turn = useCallback(() => setMode(mode === 'moon' ? 'sun' : 'moon'), [mode, setMode]);
   const toggleSound = useCallback(() => setSoundOn(sound.toggle()), []);
+  // the panel's volume knob: turning up from silence switches the sound on,
+  // all the way down switches it off
+  const [volume, setVolumeState] = useState(() => {
+    const v = Number(get('house.volume'));
+    return v > 0 && v <= 1 ? v : 0.6;
+  });
+  const setVolume = (v: number) => {
+    if (v > 0) {
+      setVolumeState(v);
+      sound.setVolume(v);
+      put('house.volume', String(v));
+      if (!sound.on) setSoundOn(sound.toggle());
+    } else if (sound.on) {
+      setSoundOn(sound.toggle());
+    }
+  };
+  useEffect(() => sound.setVolume(volume), []); // eslint-disable-line react-hooks/exhaustive-deps
   const setCoin = (c: string) => {
     setCoinState(c);
     put('house.coin', c);
@@ -184,9 +201,12 @@ export function App() {
         starred={onMarkets ? starredMarkets.includes(coin) : !!address && starredAddresses.includes(address)}
         onStar={() => (onMarkets ? toggleStar('markets', coin) : address && toggleStar('addresses', address))}
         starLabel={onMarkets ? ticker(coin) : address ? shortAddr(address) : 'address'}
-        dialLabel={onMarkets ? ticker(coin) : address ? shortAddr(address) : 'no address'}
         moon={mode === 'moon'}
         onTurn={turn}
+        soundOn={soundOn}
+        volume={volume}
+        onVolume={setVolume}
+        onSound={toggleSound}
       />
       </div>
     </>

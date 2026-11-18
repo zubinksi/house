@@ -7,14 +7,14 @@
  * Nothing loads from the network. Sound starts only after the visitor turns it
  * on, because browsers block audio until someone interacts with the page.
  */
-let ac = null, master = null, cur = null, on = false, mode = 'sun';
+let ac = null, master = null, cur = null, on = false, mode = 'sun', volume = 0.6;
 const bufs = {};
 
 function audio() {
   if (!ac) {
     ac = new (window.AudioContext || window.webkitAudioContext)();
     master = ac.createGain();
-    master.gain.value = 0.9;
+    master.gain.value = volume * 1.4;
     master.connect(ac.destination);
     bufs.pink = noiseBuffer('pink');
     bufs.brown = noiseBuffer('brown');
@@ -196,6 +196,11 @@ export const sound = {
   setMode(m) {
     mode = m;
     if (on) play();
+  },
+  /** 0 to 1: the panel's volume knob. */
+  setVolume(v) {
+    volume = Math.max(0, Math.min(1, v));
+    if (master) master.gain.setTargetAtTime(volume * 1.4, ac.currentTime, 0.08);
   },
   toggle() {
     on = !on;

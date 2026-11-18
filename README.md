@@ -16,11 +16,12 @@ shapes, under a fine grain and a mottled frost (smoked by night), while type and
 charts sit crisp on top.
 
 On desktop the slab is the screen of a wall panel (prototype): a warm enamel
-object mounted on the lit wall, with hardware under the screen. Push keys set the
-chart's range (or the address's period) and stay pressed in, a star key keeps the
-open market or address, a brass dial steps through the sidebar's list (scroll,
-drag or arrow keys), and the sun/moon switch lives on the panel. Phones show the
-screen alone.
+object mounted on the lit wall, with hardware under the screen. On the left, the
+speaker: a woven grille and a brass volume knob (turn it to set the room's sound,
+press it to switch sound on or off). The iris sits at the centre. On the right,
+push keys set the chart's range (or the address's period) and stay pressed in, a
+star key keeps the open market or address, and the sun/moon switch turns the
+light. Phones show the screen alone.
 
 The paper, ink, fonts, iris, linen and bronze switch come from the `home` repo
 (`zubinksi/home`).
