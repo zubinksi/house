@@ -20,7 +20,7 @@ export type Page = 'markets' | 'address';
 export interface Palette { dark: boolean; ink: string; thread: string }
 const PALETTES: Record<Mode, Palette> = {
   sun: { dark: false, ink: '#3a2e24', thread: '#7a6650' },
-  moon: { dark: true, ink: '#e8ebf1', thread: '#a3aec3' },
+  moon: { dark: true, ink: '#ede6dc', thread: '#b3a690' },
 };
 
 const get = (k: string) => {

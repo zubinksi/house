@@ -4,7 +4,8 @@ A home for Hyperliquid data.
 
 A slab on a wall. By day, warm sunlight falls through a blind across the home
 repo's grey wall, and the slab is cream paper. At night, moonlight comes through blinds
-onto a deep blue wall, and the slab turns a lighter blue with pale ink. Both are
+onto a dim, warm brown-grey wall, as if lit by a lamp, and the slab turns a step
+lighter with cream ink. Both are
 the same scene (the blind's slats, a curtain edge in a draft, cloud shadows
 passing) in two palettes. As in the home repo, type is pressed into the slab and rules are cut into
 it, lit from the upper left. Nothing is drawn to look like wood or brick;

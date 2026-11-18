@@ -75,37 +75,37 @@
     --sidebar var(--fade), --ink var(--fade), --ink3 var(--fade), --muted var(--fade), --b1 var(--fade);
 }
 
-/* moonlight: a deep blue wall, and a blue slab a step lighter than it, with
-   pale ink. Stars keep their warm gold. */
+/* moonlight, warm dusk: a dim brown-grey room, as if lit by a lamp, with a
+   slab a step lighter than the wall and cream ink. Stars keep their gold. */
 :root[data-mode='moon'] {
-  --wall: #1c2230;
-  --mast-ink: #dfe3ea;
-  --mast-ink2: #9aa3b3;
-  --lock-channel: #151a25;
-  --lock-engrave: #323b4c;
+  --wall: #1d1b19;
+  --mast-ink: #e8e2d8;
+  --mast-ink2: #a39a8d;
+  --lock-channel: #161412;
+  --lock-engrave: #3a352f;
 
-  --slab: #2c3547;
-  --sidebar: #283042;
-  --card: #333d51;
-  --hover: #364156;
-  --b1: #3a4559;
-  --b2: #434f64;
-  --b4: #56637a;
-  --ink: #e8ebf1;
-  --ink3: #bcc3cf;
-  --muted: #8e98aa;
-  --accent: #aab2f2;
+  --slab: #302c28;
+  --sidebar: #2b2824;
+  --card: #37322d;
+  --hover: #3b3631;
+  --b1: #403a34;
+  --b2: #4a433c;
+  --b4: #5e554c;
+  --ink: #ede6dc;
+  --ink3: #c6bcae;
+  --muted: #9a8f82;
+  --accent: #d0a970;
   --star: #e8b562;
-  --up: #a9c47f;
-  --down: #ec9a8a;
-  --shadow: 0 0.5rem 2rem rgba(4, 7, 14, 0.55);
-  /* the press, at night: deeper shade above, a faint cool catch below */
-  --press-shade: rgba(4, 8, 16, 0.5);
-  --catch: rgba(220, 230, 255, 0.07);
-  --catch-side: rgba(220, 230, 255, 0.045);
-  --dent-shade: rgba(4, 8, 16, 0.55);
-  --dent-light: rgba(220, 230, 255, 0.08);
-  --dent-fill: rgba(4, 8, 16, 0.14);
+  --up: #b0c07c;
+  --down: #e6987f;
+  --shadow: 0 0.5rem 2rem rgba(8, 6, 4, 0.55);
+  /* the press, at night: deeper shade above, a faint warm catch below */
+  --press-shade: rgba(10, 8, 6, 0.5);
+  --catch: rgba(255, 236, 210, 0.07);
+  --catch-side: rgba(255, 236, 210, 0.045);
+  --dent-shade: rgba(10, 8, 6, 0.55);
+  --dent-light: rgba(255, 236, 210, 0.08);
+  --dent-fill: rgba(10, 8, 6, 0.14);
   color-scheme: dark;
 }
 
@@ -677,7 +677,7 @@ tbody small { color: var(--muted); margin-left: 0.375rem; font-size: 0.6875rem; 
 :root[data-mode='moon'] {
   --vellum-wash: color-mix(in srgb, var(--slab) 62%, transparent);
   --vellum-side: color-mix(in srgb, var(--sidebar) 40%, transparent);
-  --vellum-edge: rgba(210, 222, 245, 0.14);
+  --vellum-edge: rgba(245, 228, 205, 0.14);
 }
 .slab {
   background-color: var(--vellum-wash);

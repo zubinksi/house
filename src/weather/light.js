@@ -7,7 +7,7 @@
  * wall, so it reads as ambient light rather than an image.
  *
  *   sun  — warm daylight through a blind, a curtain edge, cloud shadows
- *   moon — the same blind in cool, faint moonlight
+ *   moon — the same blind in faint, warm dusk light
  */
 const TAU = Math.PI * 2;
 
@@ -111,8 +111,8 @@ function blinds({ blur, glow, light, strength }) {
 /* ── Sunlight: warm daylight through the blind ──────────────────────────── */
 const sun = blinds({ blur: 8, glow: '255, 226, 182', light: '255, 232, 196', strength: 0.5 });
 
-/* ── Moonlight: cool, faint moonlight through the same blind ──────────── */
-const moon = blinds({ blur: 9, glow: '70, 92, 135', light: '150, 176, 222', strength: 0.36 });
+/* ── Moonlight: faint, warm dusk light through the same blind ─────────── */
+const moon = blinds({ blur: 9, glow: '120, 100, 78', light: '214, 192, 160', strength: 0.32 });
 
 /* ── Engine ───────────────────────────────────────────────────────────── */
 const scenes = { sun, moon };
