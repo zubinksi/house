@@ -49,7 +49,6 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu, range, 
   const m = markets.find((x) => x.name === coin);
   const live = mids[coin];
   const px = live ?? m?.price;
-  const change = m && px != null && m.prev ? (px - m.prev) / m.prev : m?.change;
   const key = coin + range;
 
   // the range's candles, refetched every minute
@@ -88,6 +87,12 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu, range, 
     const last = history.points[history.points.length - 1]?.time ?? 0;
     return [...history.points, ...ticks.filter((t) => t.time > last)];
   }, [history, ticks, key]);
+
+  // the change over the chosen range: from the chart's first point to the live
+  // price (until the range's prices arrive, the day's change stands in)
+  const first = data[0]?.value;
+  const change =
+    first && px != null ? (px - first) / first : m && px != null && m.prev ? (px - m.prev) / m.prev : m?.change;
 
   const formatTime = (t: number) => {
     const d = new Date(t * 1000);
