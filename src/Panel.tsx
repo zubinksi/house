@@ -2,9 +2,10 @@
  * The panel's control strip: the hardware under the screen of the wall panel
  * (desktop only). Range keys stay pressed in when chosen, a star key keeps the
  * open market or address, a brass dial steps through the sidebar's list, and the
- * sun/moon switch turns the light. A linen grille and the iris mark the maker.
+ * sun/moon switch turns the light. A woven grille, a lit clock window and the
+ * iris mark the maker.
  */
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import iris from './assets/iris-white.png';
 import { LightSwitch } from './Mast';
 
@@ -25,6 +26,7 @@ export function Panel({ keys, active, onKey, starred, onStar, starLabel, dialLab
   return (
     <div className="panel-strip">
       <span className="panel-grille" aria-hidden />
+      <Clock />
       <span className="panel-mark" style={{ maskImage: `url(${iris})`, WebkitMaskImage: `url(${iris})` }} aria-hidden />
 
       <div className="panel-group">
@@ -35,24 +37,20 @@ export function Panel({ keys, active, onKey, starred, onStar, starLabel, dialLab
             </button>
           ))}
         </div>
-        <span className="panel-label">range</span>
       </div>
 
       <div className="panel-group">
         <button type="button" className="hw-key hw-star" aria-pressed={starred} aria-label={starred ? `Unstar ${starLabel}` : `Star ${starLabel}`} onClick={onStar}>
           <svg viewBox="0 0 16 16" aria-hidden><path d="M8 1.6l1.9 4 4.3.5-3.2 2.9.9 4.3L8 11.1l-3.9 2.2.9-4.3L1.8 6.1l4.3-.5z" /></svg>
         </button>
-        <span className="panel-label">keep</span>
       </div>
 
       <div className="panel-group">
         <Dial label={dialLabel} />
-        <span className="panel-label">turn</span>
       </div>
 
       <div className="panel-group">
         <LightSwitch moon={moon} onTurn={onTurn} />
-        <span className="panel-label">light</span>
       </div>
     </div>
   );
@@ -111,5 +109,22 @@ function Dial({ label }: { label: string }) {
     >
       <span className="hw-dial-cap" aria-hidden />
     </button>
+  );
+}
+
+/** The panel's clock window: today's date and the time, lit behind dark glass. */
+function Clock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 15000);
+    return () => clearInterval(id);
+  }, []);
+  const date = `${now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${now.getDate()}`;
+  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return (
+    <span className="panel-clock" role="timer" aria-label={`${date}, ${time}`}>
+      <span>{date}</span>
+      <span>{time}</span>
+    </span>
   );
 }
