@@ -116,6 +116,7 @@ export function App() {
       else if (k === '/') {
         e.preventDefault();
         if (page !== 'markets') location.hash = 'markets';
+        openMenu(); // phones: the search lives in the menu (no effect on desktop)
         setSearchSignal((n) => n + 1);
       }
     };
@@ -147,9 +148,10 @@ export function App() {
             closeMenu();
           }}
           onClose={closeMenu}
+          searchSignal={searchSignal}
         />
         {page === 'markets' ? (
-          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} searchSignal={searchSignal} onMenu={openMenu} />
+          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} onMenu={openMenu} />
         ) : (
           <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} />
         )}

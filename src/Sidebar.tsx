@@ -11,7 +11,7 @@ import { filtersFor, type Filter, inFilter, ticker, assetName, keywords } from '
 import { toggleStar, useStars } from './stars';
 import { AddressForm } from './Address';
 
-export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClose }: {
+export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClose, searchSignal }: {
   page: Page;
   markets: Market[];
   coin: string;
@@ -20,6 +20,8 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
   onAddress: (a: string) => void;
   /** phones: back to the page without choosing */
   onClose: () => void;
+  /** a nudge to open the search (the / key) */
+  searchSignal: number;
 }) {
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
@@ -28,6 +30,9 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
     setSearching(false);
     setQuery('');
   }, [page]);
+  useEffect(() => {
+    if (searchSignal) setSearching(true);
+  }, [searchSignal]);
   const pick = (c: string) => {
     setSearching(false);
     setQuery('');
@@ -38,12 +43,13 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
       <div className="side-pages">
         <a className="side-page" href="#markets" aria-current={page === 'markets' ? 'page' : undefined}>Markets</a>
         <a className="side-page" href="#address" aria-current={page === 'address' ? 'page' : undefined}>Address</a>
-        {/* phones: find a market (or look up an address) without leaving the menu */}
+        {/* find a market, or look up an address, from the sidebar's corner */}
         <button
           type="button"
           className="menu-search"
           aria-label={page === 'markets' ? 'Search markets' : 'Look up an address'}
           aria-expanded={searching}
+          title={page === 'markets' ? 'Search markets (/)' : 'Look up an address'}
           onClick={() => {
             setSearching((v) => !v);
             setQuery('');

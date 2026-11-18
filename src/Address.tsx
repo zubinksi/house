@@ -153,14 +153,17 @@ export function Address({ address, onAddress, palette, onMenu }: {
             <p className="eyebrow">{data ? (data.vault ? `vault · ${data.vault}` : 'portfolio') : '\u00a0'}</p>
             <div className="m-title">
               <h1 className="m-coin" id="a-title" title={address}>{shortAddr(address)}</h1>
-              <StarButton on={stars.includes(address)} label={shortAddr(address)} onClick={() => toggleStar('addresses', address)} />
+              <span className="star-inline"><StarButton on={stars.includes(address)} label={shortAddr(address)} onClick={() => toggleStar('addresses', address)} /></span>
               <button type="button" className="link a-copy" onClick={copy}>{copied === 'copied' ? 'copied' : 'copy'}</button>
             </div>
             {copied && copied !== 'copied' && <code className="a-full">{copied}</code>}
           </div>
-          <button type="button" className="icon-btn" aria-label="Look up another address" aria-expanded={searching} title="Look up an address" onClick={() => setSearching((v) => !v)}>
+          <div className="m-actions">
+          <span className="star-corner"><StarButton on={stars.includes(address)} label={shortAddr(address)} onClick={() => toggleStar('addresses', address)} /></span>
+          <button type="button" className="icon-btn page-search" aria-label="Look up another address" aria-expanded={searching} title="Look up an address" onClick={() => setSearching((v) => !v)}>
             <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
           </button>
+          </div>
           {searching && (
             <AddressSearch
               stars={stars}

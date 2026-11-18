@@ -617,6 +617,12 @@ tbody small { color: var(--muted); margin-left: 0.375rem; font-size: 0.6875rem; 
 .menu-btn:active, .menu-close:active, .menu-search:active, .menu-search[aria-expanded='true'] { background: var(--hover); }
 .menu-btn svg, .menu-close svg, .menu-search svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
 .m-id { flex: 1; min-width: 0; }
+/* desktop: search in the sidebar's top-right corner, the star in the page's */
+.side-pages { align-items: center; }
+.menu-search { display: inline-grid; margin-left: auto; }
+.menu-search:hover { background: var(--hover); }
+.star-inline, .page-search { display: none !important; }
+.star-corner { display: inline-flex; }
 .a-start-head { display: flex; align-items: flex-start; gap: 0.25rem; }
 .side-body { display: flex; flex-direction: column; gap: 1rem; animation: fade-in 0.2s ease; }
 @keyframes fade-in { from { opacity: 0; } }
@@ -647,6 +653,10 @@ tbody small { color: var(--muted); margin-left: 0.375rem; font-size: 0.6875rem; 
   .side-pages { align-items: center; }
   .side-row { padding-block: 0.5rem; }
   .menu-btn, .menu-close, .menu-search { display: inline-grid; }
+  /* phones: the star back in line after the name, search beside the menu */
+  .star-inline { display: inline-flex !important; }
+  .page-search { display: inline-grid !important; }
+  .star-corner { display: none; }
   .menu-search { margin-left: auto; }
   /* the menu and search icons share a top row; the name sits flush left beneath */
   .m-head, .a-start-head { flex-wrap: wrap; justify-content: space-between; row-gap: 0.25rem; }

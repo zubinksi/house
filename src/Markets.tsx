@@ -32,13 +32,12 @@ const stored = (k: string) => {
   }
 };
 
-export function Markets({ coin, onCoin, markets, error, palette, searchSignal, onMenu }: {
+export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
   coin: string;
   onCoin: (c: string) => void;
   markets: Market[];
   error: boolean;
   palette: Palette;
-  searchSignal: number;
   onMenu: () => void;
 }) {
   const [range, setRange] = useState<Range>(() => (stored('house.range') as Range) in RANGES ? (stored('house.range') as Range) : '1D');
@@ -99,9 +98,7 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
     return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
   };
 
-  useEffect(() => {
-    if (searchSignal) setSearching(true);
-  }, [searchSignal]);
+
 
   return (
     <section className="detail" aria-labelledby="m-coin">
@@ -117,11 +114,13 @@ export function Markets({ coin, onCoin, markets, error, palette, searchSignal, o
             {assetName(coin) && <span className="m-name">{assetName(coin)}</span>}
           </h1>
           {/* the star right after the name, in line */}
-          <StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} />
+          <span className="star-inline"><StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} /></span>
           </div>
         </div>
         <div className="m-actions">
-          <button type="button" className="icon-btn" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
+          {/* desktop: the star sits in the corner; search lives in the sidebar */}
+          <span className="star-corner"><StarButton on={stars.includes(coin)} label={ticker(coin)} onClick={() => toggleStar('markets', coin)} /></span>
+          <button type="button" className="icon-btn page-search" aria-label="Search markets" aria-expanded={searching} title="Search markets (/)" onClick={() => setSearching((s) => !s)}>
             <svg viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="4.6" /><path d="M10.4 10.4 14 14" /></svg>
           </button>
         </div>
