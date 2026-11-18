@@ -15,6 +15,13 @@ The slab is frosted vellum: the wall and its light show through it as soft
 shapes, under a fine grain and a mottled frost (smoked by night), while type and
 charts sit crisp on top.
 
+On desktop the slab is the screen of a wall panel (prototype): a warm enamel
+object mounted on the lit wall, with hardware under the screen. Push keys set the
+chart's range (or the address's period) and stay pressed in, a star key keeps the
+open market or address, a brass dial steps through the sidebar's list (scroll,
+drag or arrow keys), and the sun/moon switch lives on the panel. Phones show the
+screen alone.
+
 The paper, ink, fonts, iris, linen and bronze switch come from the `home` repo
 (`zubinksi/home`).
 

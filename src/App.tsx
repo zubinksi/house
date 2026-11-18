@@ -7,8 +7,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Mast } from './Mast';
 import { Sidebar } from './Sidebar';
-import { Markets } from './Markets';
-import { Address } from './Address';
+import { Markets, RANGES, type Range } from './Markets';
+import { Address, PERIODS, type Period } from './Address';
+import { Panel } from './Panel';
+import { toggleStar, useStars } from './stars';
+import { ticker } from './catalog';
+import { shortAddr } from './hl';
 import { useMarkets } from './hl';
 // plain-JS engines carried over from the first version
 import { light } from './weather/light.js';
@@ -125,6 +129,21 @@ export function App() {
   }, [page, setMode, turn, toggleSound, closeMenu]);
 
   const palette = PALETTES[mode];
+
+  // the chart's span, set from the screen or the panel's keys
+  const [range, setRangeState] = useState<Range>(() => {
+    const r = get('house.range');
+    return r && r in RANGES ? (r as Range) : '1D';
+  });
+  const setRange = (r: Range) => {
+    setRangeState(r);
+    put('house.range', r);
+  };
+  const [period, setPeriod] = useState<Period>('1M');
+  const starredMarkets = useStars('markets');
+  const starredAddresses = useStars('addresses');
+  const onMarkets = page === 'markets';
+
   return (
     <>
       <Mast
@@ -133,6 +152,8 @@ export function App() {
         soundOn={soundOn}
         onSound={toggleSound}
       />
+      {/* the wall panel: the slab is its screen, its hardware beneath (desktop) */}
+      <div className="panel">
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
         <Sidebar
           page={page}
@@ -151,11 +172,23 @@ export function App() {
           searchSignal={searchSignal}
         />
         {page === 'markets' ? (
-          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} onMenu={openMenu} />
+          <Markets key="markets" coin={coin} onCoin={setCoin} markets={markets} error={error} palette={palette} onMenu={openMenu} range={range} onRange={setRange} />
         ) : (
-          <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} />
+          <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} period={period} onPeriod={setPeriod} />
         )}
       </main>
+      <Panel
+        keys={onMarkets ? (Object.keys(RANGES) as Range[]) : (Object.keys(PERIODS) as Period[])}
+        active={onMarkets ? range : period}
+        onKey={(k) => (onMarkets ? setRange(k as Range) : setPeriod(k as Period))}
+        starred={onMarkets ? starredMarkets.includes(coin) : !!address && starredAddresses.includes(address)}
+        onStar={() => (onMarkets ? toggleStar('markets', coin) : address && toggleStar('addresses', address))}
+        starLabel={onMarkets ? ticker(coin) : address ? shortAddr(address) : 'address'}
+        dialLabel={onMarkets ? ticker(coin) : address ? shortAddr(address) : 'no address'}
+        moon={mode === 'moon'}
+        onTurn={turn}
+      />
+      </div>
     </>
   );
 }

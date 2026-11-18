@@ -13,34 +13,28 @@ import { StarButton } from './StarButton';
 import { MenuButton } from './MenuButton';
 import type { Palette } from './App';
 
-const RANGES = {
+export const RANGES = {
   '1H': { interval: '1m', secs: 3600 },
   '1D': { interval: '15m', secs: 86400 },
   '1W': { interval: '1h', secs: 7 * 86400 },
   '1M': { interval: '4h', secs: 30 * 86400 },
   '1Y': { interval: '1d', secs: 365 * 86400 },
 } as const;
-type Range = keyof typeof RANGES;
+export type Range = keyof typeof RANGES;
 const when = (t: number) =>
   new Date(t * 1000).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-const stored = (k: string) => {
-  try {
-    return localStorage.getItem(k);
-  } catch {
-    return null;
-  }
-};
-
-export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
+export function Markets({ coin, onCoin, markets, error, palette, onMenu, range, onRange }: {
   coin: string;
   onCoin: (c: string) => void;
   markets: Market[];
   error: boolean;
   palette: Palette;
   onMenu: () => void;
+  range: Range;
+  onRange: (r: Range) => void;
 }) {
-  const [range, setRange] = useState<Range>(() => (stored('house.range') as Range) in RANGES ? (stored('house.range') as Range) : '1D');
+
   const [history, setHistory] = useState<{ key: string; points: LivelinePoint[] }>({ key: '', points: [] });
   const [ticks, setTicks] = useState<LivelinePoint[]>([]);
   const [searching, setSearching] = useState(false);
@@ -165,20 +159,13 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
 
       <div className="module m-chart">
         <div className="module-head">
-          <div className="seg" role="group" aria-label="Range">
+          <div className="seg screen-ranges" role="group" aria-label="Range">
             {(Object.keys(RANGES) as Range[]).map((r) => (
               <button
                 key={r}
                 type="button"
                 aria-pressed={r === range}
-                onClick={() => {
-                  setRange(r);
-                  try {
-                    localStorage.setItem('house.range', r);
-                  } catch {
-                    // remembered for the visit only
-                  }
-                }}
+                onClick={() => onRange(r)}
               >
                 {r}
               </button>

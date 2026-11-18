@@ -19,8 +19,8 @@ import type { Palette } from './App';
 const ADDR = /^0x[0-9a-fA-F]{40}$/;
 const EXAMPLE = '0x010461c14e146ac35fe42271bdc1134ee31c703a'; // a trading vault inside HLP
 
-const PERIODS = { '1D': 'day', '1W': 'week', '1M': 'month', All: 'allTime' } as const;
-type Period = keyof typeof PERIODS;
+export const PERIODS = { '1D': 'day', '1W': 'week', '1M': 'month', All: 'allTime' } as const;
+export type Period = keyof typeof PERIODS;
 const PERIOD_WORD: Record<Period, string> = { '1D': '24h', '1W': '7d', '1M': '30d', All: 'all-time' };
 
 interface History { accountValueHistory: [number, string][]; pnlHistory: [number, string][]; vlm: string }
@@ -93,15 +93,16 @@ async function load(addr: string): Promise<Data> {
   };
 }
 
-export function Address({ address, onAddress, palette, onMenu }: {
+export function Address({ address, onAddress, palette, onMenu, period, onPeriod: setPeriod }: {
   address: string;
   onAddress: (a: string) => void;
   palette: Palette;
   onMenu: () => void;
+  period: Period;
+  onPeriod: (p: Period) => void;
 }) {
   const [searching, setSearching] = useState(false);
   const [state, setState] = useState<{ addr: string; data?: Data; error?: boolean }>({ addr: '' });
-  const [period, setPeriod] = useState<Period>('1M');
   const [series, setSeries] = useState<'value' | 'pnl'>('value');
   const [table, setTable] = useState<'positions' | 'balances' | 'orders'>('positions');
   const [copied, setCopied] = useState('');
@@ -214,7 +215,7 @@ export function Address({ address, onAddress, palette, onMenu }: {
                 <button type="button" aria-pressed={series === 'value'} onClick={() => setSeries('value')}>account value</button>
                 <button type="button" aria-pressed={series === 'pnl'} onClick={() => setSeries('pnl')}>pnl</button>
               </div>
-              <div className="seg" role="group" aria-label="Period">
+              <div className="seg screen-periods" role="group" aria-label="Period">
                 {(Object.keys(PERIODS) as Period[]).map((p) => (
                   <button key={p} type="button" aria-pressed={p === period} onClick={() => setPeriod(p)}>{p}</button>
                 ))}

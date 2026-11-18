@@ -37,30 +37,38 @@ export function Mast({ mode, onTurn, soundOn, onSound }: {
           {soundOn ? 'sound on' : 'sound off'}
         </button>
 
-        {/* the home repo's bronze lock, turned to the light: a sun and a moon are
-            engraved either end, and the knob rolls over one, leaving the light
-            you're in showing */}
-        <button
-          type="button"
-          className="mast-switch"
-          role="switch"
-          aria-checked={moon}
-          aria-label={moon ? 'Moonlight. Turn to sunlight' : 'Sunlight. Turn to moonlight'}
-          title="Sunlight / moonlight (T)"
-          onClick={onTurn}
-        >
-          <span className="switch-track" aria-hidden>
-            <svg className="switch-icon switch-sun" viewBox="0 0 14 14">
-              <circle cx="7" cy="7" r="2.6" />
-              <path d="M7 1v1.6M7 11.4V13M1 7h1.6M11.4 7H13M2.8 2.8l1.1 1.1M10.1 10.1l1.1 1.1M2.8 11.2l1.1-1.1M10.1 3.9l1.1-1.1" />
-            </svg>
-            <svg className="switch-icon switch-moon" viewBox="0 0 14 14">
-              <path className="fill" d="M10.8 9.4A5 5 0 0 1 4.6 3.2a5 5 0 1 0 6.2 6.2z" />
-            </svg>
-            <span className="switch-knob" />
-          </span>
-        </button>
+        <LightSwitch moon={moon} onTurn={onTurn} />
       </div>
     </header>
+  );
+}
+
+/**
+ * The home repo's bronze lock, turned to the light: a sun and a moon are
+ * engraved either end, and the knob rolls over one, leaving the light you're
+ * in showing. On the masthead on a phone; on the panel on a desktop.
+ */
+export function LightSwitch({ moon, onTurn }: { moon: boolean; onTurn: () => void }) {
+  return (
+    <button
+      type="button"
+      className="mast-switch"
+      role="switch"
+      aria-checked={moon}
+      aria-label={moon ? 'Moonlight. Turn to sunlight' : 'Sunlight. Turn to moonlight'}
+      title="Sunlight / moonlight (T)"
+      onClick={onTurn}
+    >
+      <span className="switch-track" aria-hidden>
+        <svg className="switch-icon switch-sun" viewBox="0 0 14 14">
+          <circle cx="7" cy="7" r="2.6" />
+          <path d="M7 1v1.6M7 11.4V13M1 7h1.6M11.4 7H13M2.8 2.8l1.1 1.1M10.1 10.1l1.1 1.1M2.8 11.2l1.1-1.1M10.1 3.9l1.1-1.1" />
+        </svg>
+        <svg className="switch-icon switch-moon" viewBox="0 0 14 14">
+          <path className="fill" d="M10.8 9.4A5 5 0 0 1 4.6 3.2a5 5 0 1 0 6.2 6.2z" />
+        </svg>
+        <span className="switch-knob" />
+      </span>
+    </button>
   );
 }

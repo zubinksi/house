@@ -185,6 +185,26 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
       return b.m.vol - a.m.vol;
     });
 
+  // the panel's dial steps through the list as it's shown, and keeps the row in view
+  const order = useRef<string[]>([]);
+  order.current = shown.map((r) => r.m.name);
+  useEffect(() => {
+    const onStep = (e: Event) => {
+      const dir = (e as CustomEvent<number>).detail;
+      const list = order.current;
+      if (!list.length) return;
+      const i = list.indexOf(coin);
+      const next = list[i < 0 ? 0 : Math.max(0, Math.min(list.length - 1, i + dir))];
+      if (next && next !== coin) onCoin(next);
+    };
+    window.addEventListener('house:step', onStep);
+    return () => window.removeEventListener('house:step', onStep);
+  }, [coin, onCoin]);
+  const listRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [coin]);
+
   if (!markets.length) return <p className="side-empty">Loading markets…</p>;
   return (
     <>
@@ -222,7 +242,7 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
         </button>
       </div>
       {shown.length ? (
-        <ul className="side-list">
+        <ul className="side-list" ref={listRef}>
           {shown.map(({ m, px, change, star }) => (
             <li key={m.name} className="side-item" aria-current={m.name === coin ? 'true' : undefined}>
               <button
@@ -255,6 +275,17 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
 
 function AddressList({ address, onAddress }: { address: string; onAddress: (a: string) => void }) {
   const stars = useStars('addresses');
+  useEffect(() => {
+    const onStep = (e: Event) => {
+      const dir = (e as CustomEvent<number>).detail;
+      if (!stars.length) return;
+      const i = stars.indexOf(address);
+      const next = stars[i < 0 ? 0 : Math.max(0, Math.min(stars.length - 1, i + dir))];
+      if (next && next !== address) onAddress(next);
+    };
+    window.addEventListener('house:step', onStep);
+    return () => window.removeEventListener('house:step', onStep);
+  }, [stars, address, onAddress]);
   if (!stars.length) return <p className="side-empty">Star an address to keep it here.</p>;
   return (
     <ul className="side-list">
