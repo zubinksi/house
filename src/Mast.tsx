@@ -9,13 +9,11 @@ import type { Mode } from './App';
 /** "NOV 17" */
 const dateline = (d: Date) => `${d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${d.getDate()}`;
 
-export function Mast({ mode, onTurn, soundOn, onSound, vellum, onVellum }: {
+export function Mast({ mode, onTurn, soundOn, onSound }: {
   mode: Mode;
   onTurn: () => void;
   soundOn: boolean;
   onSound: () => void;
-  vellum: boolean;
-  onVellum: () => void;
 }) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -35,10 +33,6 @@ export function Mast({ mode, onTurn, soundOn, onSound, vellum, onVellum }: {
 
       <div className="mast-right">
         <span className="mast-note">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        {/* prototype: the slab as frosted vellum */}
-        <button type="button" className="mast-text" aria-pressed={vellum} onClick={onVellum} title="Vellum (V)">
-          {vellum ? 'vellum on' : 'vellum off'}
-        </button>
         <button type="button" className="mast-text" aria-pressed={soundOn} onClick={onSound} title="Sound (A)">
           {soundOn ? 'sound on' : 'sound off'}
         </button>
