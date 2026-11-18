@@ -16,7 +16,7 @@
  * to that exact version. If an upgrade stops the linen showing, the chart still
  * works with Liveline's own gradient.
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { HoverPoint } from 'liveline';
 import { Liveline, type LivelinePoint } from 'liveline';
 
@@ -138,21 +138,124 @@ export interface LinenLineProps {
    * leaves); the readout above the plot is then left out.
    */
   onScrub?: (pt: { time: number; value: number } | null) => void;
+  /**
+   * A stretch of the chart chosen to measure: pressed and dragged with a mouse,
+   * or two taps on a phone. `to` is missing after the first tap. Pages that
+   * take this show it themselves; others get it in the readout.
+   */
+  onRange?: (r: Range | null) => void;
+  /** a span of time, short, for the readout ("10:14 AM – 2:30 PM") */
+  formatSpan?: (from: number, to: number) => string;
   emptyText?: string;
 }
 
-export function LinenLine({ ink, thread, dark, live = true, formatWhen, onScrub, ...p }: LinenLineProps) {
+export interface Point { time: number; value: number }
+export interface Range { from: Point; to?: Point; change?: number }
+
+type Mark = Point & { x: number };
+
+export function LinenLine({ ink, thread, dark, live = true, formatWhen, onScrub, onRange, formatSpan, ...p }: LinenLineProps) {
   const host = useRef<HTMLDivElement>(null);
   const tip = useRef<HTMLDivElement>(null);
-  const fmt = useRef({ formatWhen, formatValue: p.formatValue, onScrub });
-  fmt.current = { formatWhen, formatValue: p.formatValue, onScrub };
+  const fmt = useRef({ formatWhen, formatValue: p.formatValue, onScrub, onRange, formatSpan });
+  fmt.current = { formatWhen, formatValue: p.formatValue, onScrub, onRange, formatSpan };
+
+  /* ── Measuring a stretch: press and drag (mouse), or tap twice (touch) ── */
+  const last = useRef<{ pt: Mark; at: number } | null>(null); // the latest point under the crosshair
+  const anchor = useRef<Mark | null>(null);
+  const pressing = useRef(false);
+  const down = useRef<{ x: number; y: number; at: number } | null>(null);
+  const [sel, setSelState] = useState<{ a: Mark; b?: Mark } | null>(null);
+  const selRef = useRef(sel);
+
+  const setSel = (next: { a: Mark; b?: Mark } | null) => {
+    selRef.current = next;
+    setSelState(next);
+    const f = fmt.current;
+    let r: Range | null = null;
+    if (next) {
+      const [a, b] = next.b && next.b.time < next.a.time ? [next.b, next.a] : [next.a, next.b];
+      const plain = (m: Mark) => ({ time: m.time, value: m.value });
+      r = b ? { from: plain(a), to: plain(b), change: a.value ? (b.value - a.value) / a.value : 0 } : { from: plain(a) };
+    }
+    if (f.onRange) return f.onRange(r);
+    showRange(r);
+  };
+
+  // pages without their own readout get the stretch in the one above the plot
+  const showRange = (r: Range | null) => {
+    const el = tip.current;
+    const f = fmt.current;
+    if (!el) return;
+    el.innerHTML = '';
+    if (!r) return;
+    if (!r.to) {
+      el.textContent = 'tap a second point';
+      return;
+    }
+    const b = document.createElement('b');
+    const c = r.change ?? 0;
+    b.textContent = `${c > 0 ? '+' : c < 0 ? '−' : ''}${Math.abs(c * 100).toFixed(2)}%`;
+    b.className = c > 0 ? 'up' : c < 0 ? 'down' : '';
+    const span = f.formatSpan ? f.formatSpan(r.from.time, r.to.time) : '';
+    el.append(span ? `${span} · ` : '', b);
+  };
+
+  const mark = (): Mark | null => (last.current && Date.now() - last.current.at < 800 ? last.current.pt : null);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    down.current = { x: e.clientX, y: e.clientY, at: Date.now() };
+    if (e.pointerType === 'mouse' && e.button === 0) {
+      pressing.current = true;
+      anchor.current = mark();
+      setSel(null);
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    pressing.current = false;
+    const d = down.current;
+    down.current = null;
+    if (e.pointerType === 'mouse') {
+      // a click without a drag clears; a drag leaves its stretch showing
+      const sel = selRef.current;
+      if (!sel?.b || Math.abs((sel.b.x ?? 0) - sel.a.x) < 4) setSel(null);
+      anchor.current = null;
+      return;
+    }
+    // touch: a tap, not a drag. The chart takes a tap's point just after the
+    // finger lifts, so read it a moment later, and only a point from this tap
+    if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12 || Date.now() - d.at > 500) return;
+    setTimeout(() => {
+      const l = last.current;
+      if (!l || l.at < d.at) return;
+      const pt = l.pt;
+      const sel = selRef.current;
+      if (sel?.b || (sel && Math.abs(pt.x - sel.a.x) < 4)) setSel(null); // a third tap (or the same spot) clears
+      else if (sel) setSel({ a: sel.a, b: pt });
+      else setSel({ a: pt });
+    }, 120);
+  };
+  const onPointerLeave = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'mouse') return;
+    pressing.current = false;
+    anchor.current = null;
+    if (selRef.current) setSel(null);
+  };
 
   // written straight to the DOM: hovering redraws nothing in React
   const onHover = (pt: HoverPoint | null) => {
+    if (pt) last.current = { pt: { time: pt.time, value: pt.value, x: pt.x }, at: Date.now() };
+    // dragging a stretch: it follows the pointer
+    if (pressing.current && pt) {
+      if (!anchor.current) anchor.current = { time: pt.time, value: pt.value, x: pt.x };
+      else setSel({ a: anchor.current, b: { time: pt.time, value: pt.value, x: pt.x } });
+    }
     const f = fmt.current;
+    if (selRef.current?.b) return; // a measured stretch holds the readout
     if (f.onScrub) return f.onScrub(pt && { time: pt.time, value: pt.value });
     const el = tip.current;
     if (!el || !f.formatWhen) return;
+    if (selRef.current) return;
     el.classList.toggle('is-scrubbing', !!pt);
     el.innerHTML = '';
     if (!pt) return; // the readout shows only while scrubbing
@@ -170,7 +273,24 @@ export function LinenLine({ ink, thread, dark, live = true, formatWhen, onScrub,
   return (
     <div className="linen-wrap">
     {!onScrub && <div className="chart-tip" ref={tip} aria-live="polite" />}
-    <div className="linen-line" ref={host}>
+    <div
+      className="linen-line"
+      ref={host}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerLeave}
+    >
+      {/* the measured stretch: a band between the two points, or one mark */}
+      {sel && (
+        <span
+          className={`chart-range${sel.b ? '' : ' is-mark'}`}
+          style={{
+            left: Math.min(sel.a.x, sel.b?.x ?? sel.a.x),
+            width: sel.b ? Math.abs(sel.b.x - sel.a.x) : 0,
+          }}
+          aria-hidden
+        />
+      )}
       <Liveline
         onHover={onHover}
         tooltipOutline={false}

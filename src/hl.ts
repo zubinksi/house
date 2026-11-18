@@ -268,3 +268,16 @@ export const monthYear = (t: number) => {
   return `${d.toLocaleDateString('en-US', { month: 'short' })} ’${String(d.getFullYear()).slice(2)}`;
 };
 export const shortAddr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+
+/** A stretch of time, short: "Nov 17, 10:14 AM – 2:30 PM", or "Nov 3 – Nov 17". */
+export const span = (from: number, to: number) => {
+  const a = new Date(from * 1000), b = new Date(to * 1000);
+  const day = (d: Date) => d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const hm = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (to - from < 2 * 86400) {
+    return a.toDateString() === b.toDateString() ? `${day(a)}, ${hm(a)} – ${hm(b)}` : `${day(a)}, ${hm(a)} – ${day(b)}, ${hm(b)}`;
+  }
+  const y = a.getFullYear() !== b.getFullYear();
+  const dy = (d: Date) => (y ? d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : day(d));
+  return `${dy(a)} – ${dy(b)}`;
+};

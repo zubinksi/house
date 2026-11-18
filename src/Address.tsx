@@ -9,7 +9,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { LinenLine } from './LinenLine';
-import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, DEXES, DASH } from './hl';
+import { info, fetchMarkets, fetchSpotPrices, price, pct, size, tone, usd, usdShort, monthYear, shortAddr, DEXES, DASH, span as timeSpan } from './hl';
 import { ticker } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
@@ -234,6 +234,7 @@ export function Address({ address, onAddress, palette, onMenu }: {
                 formatValue={(v) => usdShort(v)}
                 formatTime={formatTime}
                 formatWhen={(t) => new Date(t * 1000).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                formatSpan={timeSpan}
                 emptyText="No history for this period yet"
               />
             </div>

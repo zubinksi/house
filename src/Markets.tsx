@@ -5,8 +5,8 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { LivelinePoint } from 'liveline';
-import { LinenLine } from './LinenLine';
-import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, ISSUER } from './hl';
+import { LinenLine, type Range as StretchRange } from './LinenLine';
+import { type Market, fetchCandles, price, pct, tone, usdShort, monthYear, useMids, ISSUER, span } from './hl';
 import { ticker, assetName, keywords } from './catalog';
 import { toggleStar, useStars } from './stars';
 import { StarButton } from './StarButton';
@@ -45,7 +45,11 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
   const [ticks, setTicks] = useState<LivelinePoint[]>([]);
   const [searching, setSearching] = useState(false);
   const [scrub, setScrub] = useState<{ time: number; value: number } | null>(null);
-  useEffect(() => setScrub(null), [coin, range]);
+  const [stretch, setStretch] = useState<StretchRange | null>(null);
+  useEffect(() => {
+    setScrub(null);
+    setStretch(null);
+  }, [coin, range]);
   const mids = useMids();
   const stars = useStars('markets');
   const m = markets.find((x) => x.name === coin);
@@ -137,12 +141,24 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
       </div>
 
       {/* scrubbing the chart puts its price and moment here, in place of the live ones */}
-      <div className="m-quote" data-scrubbing={scrub ? true : undefined} aria-live="polite">
+      <div className="m-quote" data-scrubbing={scrub || stretch ? true : undefined} aria-live="polite">
+        {stretch?.to ? (
+          <>
+            {/* a measured stretch: its change large, its span beneath */}
+            <div className={`m-price ${tone(stretch.change)}`}>{pct(stretch.change)}</div>
+            <div className="m-change m-when">{span(stretch.from.time, stretch.to.time)}</div>
+          </>
+        ) : (
+          <>
         <div className="m-price">{scrub ? price(scrub.value) : px != null ? price(px) : '—'}</div>
-        {scrub ? (
+        {stretch ? (
+          <div className="m-change m-when">tap a second point</div>
+        ) : scrub ? (
           <div className="m-change m-when">{when(scrub.time)}</div>
         ) : (
           change != null && <div className={`m-change ${tone(change)}`}>{pct(change)}</div>
+        )}
+          </>
         )}
         {error && !m && <div className="m-error">Couldn't reach Hyperliquid.</div>}
       </div>
@@ -181,6 +197,7 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
             formatValue={(v) => '$' + price(v)}
             formatTime={formatTime}
             onScrub={setScrub}
+            onRange={setStretch}
             emptyText="No prices for this range"
           />
         </div>
