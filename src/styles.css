@@ -758,10 +758,9 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-lo: #e2dacb;
   --key-side: #bdb29d;
   --gasket: #6b6152;
-  /* the screen's recess: a fine dark glass edge, shade falling in from the top
-     where the enamel steps down, and light caught on the lower lip */
+  /* the screen's edge: a fine dark line where glass meets enamel, with a thin
+     catch of light just outside it, the same all the way round */
   --glass-edge: rgba(46, 34, 22, 0.5);
-  --recess-shade: rgba(60, 44, 24, 0.24);
   --lip-light: rgba(255, 255, 255, 0.7);
 }
 :root[data-mode='moon'] {
@@ -774,27 +773,10 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-side: #2c2823;
   --gasket: #141210;
   --glass-edge: rgba(0, 0, 0, 0.7);
-  --recess-shade: rgba(0, 0, 0, 0.5);
   --lip-light: rgba(255, 236, 210, 0.12);
 }
 .panel-strip { display: none; }
 .screen { position: relative; }
-.screen-glass { display: none; }
-@media (min-width: 761px), (max-width: 760px) {
-  .panel .screen-glass {
-    display: block;
-    position: absolute;
-    inset: 0;
-    z-index: 6;
-    pointer-events: none;
-    border-radius: 0.5rem;
-    box-shadow:
-      inset 0 9px 10px -7px var(--recess-shade),
-      inset 0 1px 2px var(--recess-shade),
-      inset 1px 0 2px -1px var(--recess-shade),
-      inset -1px 0 2px -1px var(--recess-shade);
-  }
-}
 .panel-top { display: none; }
 /* push keys in a shallow tray; a chosen key stays pressed in */
 .panel-keys {
@@ -857,7 +839,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     background-color: var(--slab);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    box-shadow: 0 0 0 1px var(--glass-edge), 0 1.5px 0 1px var(--lip-light);
+    box-shadow: 0 0 0 1px var(--glass-edge), 0 0 0 2px var(--lip-light); /* the same edge all round */
   }
   .panel .sidebar { border-radius: 0.5rem 0 0 0.5rem; }
 
@@ -947,7 +929,6 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
   }
   .screen { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  .panel .screen-glass { border-radius: 0.625rem; }
   /* the screen: set into the panel, scrolling inside it */
   .panel .slab {
     flex: 1;
@@ -959,7 +940,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
     background-color: var(--slab);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    box-shadow: 0 0 0 1px var(--glass-edge), 0 1.5px 0 1px var(--lip-light);
+    box-shadow: 0 0 0 1px var(--glass-edge), 0 0 0 2px var(--lip-light); /* the same edge all round */
   }
   .panel .slab.is-menu .sidebar { min-height: 100%; }
   /* the strip: switch on the left, keys on the right */
