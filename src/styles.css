@@ -389,7 +389,20 @@ a { color: inherit; }
 /* Side by side, the slab keeps one height and each column scrolls inside it,
    as the home repo's does. Phones scroll the page instead. */
 @media (min-width: 761px) {
-  .slab { height: clamp(30rem, (100vh - 8rem) * 0.8, 44rem); min-height: 0; }
+  /* the slab fills the window below the masthead, within limits */
+  .slab { height: clamp(26rem, 100vh - 7.5rem, 48rem); min-height: 0; }
+  /* the market page fits without scrolling: the chart takes whatever height
+     is left after the price and the stats, down to a floor */
+  .m-chart { flex: 1 1 0; min-height: 11.5rem; } /* the ranges and a chart of at least ~9rem */
+  .m-detail .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  /* a short window: a smaller price and tighter spacing leave the chart room */
+  @media (max-height: 700px) {
+    .m-detail { gap: 1.125rem; padding-block: 1.25rem 1.5rem; }
+    .m-detail .m-price { font-size: 3.25rem; }
+    .m-detail .m-quote { gap: 0.375rem; }
+    .m-detail .stats { padding-top: 0.875rem; }
+  }
+  .m-detail .chart-box-tall { flex: 1 1 0; height: auto; min-height: 0; max-height: 26rem; }
   .detail, .side-body > .side-list {
     min-height: 0;
     overflow-y: auto;

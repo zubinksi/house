@@ -105,7 +105,7 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
 
 
   return (
-    <section className="detail" aria-labelledby="m-coin">
+    <section className="detail m-detail" aria-labelledby="m-coin">
       {/* after the midnight repo's chart page: ticker and name, then the price
           large, then the day's move */}
       <div className="m-head">
@@ -163,7 +163,7 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu }: {
         {error && !m && <div className="m-error">Couldn't reach Hyperliquid.</div>}
       </div>
 
-      <div className="module">
+      <div className="module m-chart">
         <div className="module-head">
           <div className="seg" role="group" aria-label="Range">
             {(Object.keys(RANGES) as Range[]).map((r) => (
