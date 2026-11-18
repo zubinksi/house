@@ -11,15 +11,15 @@ import { filtersFor, type Filter, inFilter, ticker, assetName, keywords } from '
 import { toggleStar, useStars } from './stars';
 import { AddressForm } from './Address';
 
-export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClose, searchSignal }: {
+export function Sidebar({ page, markets, coin, onCoin, address, onAddress, open, searchSignal }: {
   page: Page;
   markets: Market[];
   coin: string;
   onCoin: (c: string) => void;
   address: string;
   onAddress: (a: string) => void;
-  /** phones: back to the page without choosing */
-  onClose: () => void;
+  /** phones: the menu is open (picking a row, the current one included, closes it) */
+  open: boolean;
   /** a nudge to open the search (the / key) */
   searchSignal: number;
 }) {
@@ -57,9 +57,6 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
         >
           <svg viewBox="0 0 24 24" aria-hidden><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
         </button>
-        <button type="button" className="menu-close" aria-label="Close the menu" onClick={onClose}>
-          <svg viewBox="0 0 24 24" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
-        </button>
       </div>
       {/* keyed by page, so switching pages fades one list into the other */}
       <div className="side-body" key={page}>
@@ -93,7 +90,7 @@ export function Sidebar({ page, markets, coin, onCoin, address, onAddress, onClo
           />
         )}
         {page === 'markets'
-          ? <MarketList markets={markets} coin={coin} onCoin={pick} query={searching ? query : ''} searching={searching} />
+          ? <MarketList markets={markets} coin={coin} onCoin={pick} query={searching ? query : ''} searching={searching} open={open} />
           : <AddressList address={address} onAddress={onAddress} />}
       </div>
     </nav>
@@ -135,13 +132,14 @@ const remember = (key: string, v: string) => {
  * in the order they were starred, then by volume or by the day's move. Each
  * row's star keeps a market on top; the row opens it.
  */
-function MarketList({ markets, coin, onCoin, query, searching }: {
+function MarketList({ markets, coin, onCoin, query, searching, open }: {
   markets: Market[];
   coin: string;
   onCoin: (c: string) => void;
   query: string;
   /** while searching, the search looks across every market and the filters step aside */
   searching: boolean;
+  open: boolean;
 }) {
   const [chosen, setFilter] = useState<Filter>(() => {
     try {
@@ -189,6 +187,20 @@ function MarketList({ markets, coin, onCoin, query, searching }: {
   useEffect(() => {
     listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [coin]);
+  // phones: opening the menu brings the market you're on into view, ready to
+  // tap to go back to it
+  useEffect(() => {
+    if (!open) return;
+    // after the menu has laid out: set the screen's scroll so the row sits mid-way
+    const id = setTimeout(() => {
+      const row = listRef.current?.querySelector<HTMLElement>('[aria-current="true"]');
+      const screen = row?.closest<HTMLElement>('.slab');
+      if (!row || !screen) return;
+      const r = row.getBoundingClientRect(), sc = screen.getBoundingClientRect();
+      screen.scrollTop += r.top - sc.top - (sc.height - r.height) / 2;
+    }, 60);
+    return () => clearTimeout(id);
+  }, [open]);
 
   if (!markets.length) return <p className="side-empty">Loading markets…</p>;
   return (

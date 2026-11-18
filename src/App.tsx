@@ -163,7 +163,7 @@ export function App() {
             setAddress(a);
             closeMenu();
           }}
-          onClose={closeMenu}
+          open={menu}
           searchSignal={searchSignal}
         />
         {page === 'markets' ? (
