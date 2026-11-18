@@ -390,14 +390,18 @@ a { color: inherit; }
    as the home repo's does. Phones scroll the page instead. */
 @media (min-width: 761px) {
   .slab { height: clamp(30rem, (100vh - 8rem) * 0.8, 44rem); min-height: 0; }
-  .sidebar, .detail {
+  .detail, .side-body > .side-list {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--b4) transparent;
   }
-  .side-pages { position: sticky; top: -1.375rem; margin-top: -1.375rem; padding-top: 1.375rem; background: var(--sidebar); z-index: 1; }
+  /* the sidebar stays put (pages, filters, count); only its list scrolls, so
+     nothing needs a background of its own over the vellum */
+  .sidebar { min-height: 0; overflow: hidden; }
+  .side-body { flex: 1; min-height: 0; }
+  .side-body > .side-list { flex: 1; }
 }
 
 /* ── Shared pieces ── */
@@ -683,9 +687,6 @@ tbody small { color: var(--muted); margin-left: 0.375rem; font-size: 0.6875rem; 
   box-shadow: 0 0 0 1px var(--vellum-edge), 0 0.75rem 2.5rem rgba(20, 20, 30, 0.08);
 }
 .sidebar { background: var(--vellum-side); border-right-color: var(--vellum-edge); }
-@media (min-width: 761px) {
-  .side-pages { background: color-mix(in srgb, var(--sidebar) 30%, transparent); }
-}
 
 /* ── Texture: the press (from the home repo) ── */
 .m-coin, .m-price, .stats-lead dd {
