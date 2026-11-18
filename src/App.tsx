@@ -149,6 +149,9 @@ export function App() {
       {/* the wall panel: the slab is its screen, its hardware beneath (desktop) */}
       <div className="panel">
       <PanelTop />
+      {/* the screen, set into the panel: a glass layer over it carries the
+          recess's shadow, so the scrolling content passes beneath it */}
+      <div className="screen">
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
         <Sidebar
           page={page}
@@ -172,6 +175,8 @@ export function App() {
           <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} period={period} onPeriod={setPeriod} />
         )}
       </main>
+      <span className="screen-glass" aria-hidden />
+      </div>
       <Panel
         keys={page === 'markets' ? (Object.keys(RANGES) as Range[]) : (Object.keys(PERIODS) as Period[])}
         active={page === 'markets' ? range : period}
