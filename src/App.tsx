@@ -52,6 +52,13 @@ export function App() {
   const [coin, setCoinState] = useState(() => get('house.coin') || 'HYPE');
   const [address, setAddressState] = useState(() => get('house.address') || '');
   const [soundOn, setSoundOn] = useState(false);
+  // prototype: the slab as frosted vellum, the light showing through
+  const [vellum, setVellum] = useState(() => get('house.vellum') !== 'off');
+  useEffect(() => {
+    if (vellum) document.documentElement.dataset.vellum = '';
+    else delete document.documentElement.dataset.vellum;
+    put('house.vellum', vellum ? 'on' : 'off');
+  }, [vellum]);
   const [searchSignal, setSearchSignal] = useState(0);
   // phones: the sidebar is a menu laid over the page, opened from its icon
   const [menu, setMenu] = useState(false);
@@ -114,6 +121,7 @@ export function App() {
       else if (k === 'm') setMode('moon');
       else if (k === 't') turn();
       else if (k === 'a') toggleSound();
+      else if (k === 'v') setVellum((v) => !v);
       else if (k === '/') {
         e.preventDefault();
         if (page !== 'markets') location.hash = 'markets';
@@ -132,7 +140,13 @@ export function App() {
         onTurn={turn}
         soundOn={soundOn}
         onSound={toggleSound}
+        vellum={vellum}
+        onVellum={() => setVellum((v) => !v)}
       />
+      {/* the slab, with two loose sheets beneath it (shown as vellum) */}
+      <div className="slab-stack">
+      <span className="sheet sheet-1" aria-hidden />
+      <span className="sheet sheet-2" aria-hidden />
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
         <Sidebar
           page={page}
@@ -155,6 +169,7 @@ export function App() {
           <Address key="address" address={address} onAddress={setAddress} palette={palette} onMenu={openMenu} />
         )}
       </main>
+      </div>
     </>
   );
 }
