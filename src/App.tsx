@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Mast } from './Mast';
 import { Sidebar } from './Sidebar';
 import { Markets, RANGES, type Range } from './Markets';
-import { Address, type Period } from './Address';
+import { Address, PERIODS, type Period } from './Address';
 import { Panel } from './Panel';
 import { useMarkets } from './hl';
 // plain-JS engines carried over from the first version
@@ -172,6 +172,9 @@ export function App() {
         )}
       </main>
       <Panel
+        keys={page === 'markets' ? (Object.keys(RANGES) as Range[]) : (Object.keys(PERIODS) as Period[])}
+        active={page === 'markets' ? range : period}
+        onKey={(k) => (page === 'markets' ? setRange(k as Range) : setPeriod(k as Period))}
         moon={mode === 'moon'}
         onTurn={turn}
       />
