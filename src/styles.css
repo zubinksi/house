@@ -275,7 +275,7 @@ a { color: inherit; }
 }
 .side-page:hover { color: var(--ink); }
 .side-page[aria-current='page'] { color: var(--ink); font-weight: 600; }
-.side-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.side-list { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; } /* rows keep their height, however few */
 .side-row {
   width: 100%;
   display: grid;
