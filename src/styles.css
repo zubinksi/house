@@ -756,13 +756,9 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-lo: #e2dacb;
   --key-side: #bdb29d;
   --gasket: #6b6152;
-  /* engraving on the drum: ink a little lifted, shade above, light below */
-  --drum-ink: #5a4c3d;
-  --drum-cut: rgba(40, 28, 14, 0.45);
-  --drum-catch: rgba(255, 255, 255, 0.85);
-  /* the bezel's status light: warm white by day, amber at dusk */
-  --lamp: #fff6e4;
-  --lamp-glow: rgba(255, 236, 196, 0.95);
+  /* the bezel's status light: soft green, by day and at dusk */
+  --lamp: #9fd29a;
+  --lamp-glow: rgba(140, 205, 132, 0.85);
   --lamp-rim: rgba(90, 70, 44, 0.35); /* the lens's fine dark rim, so white reads on cream */
   /* the screen's edge: a fine dark line where glass meets enamel, with a thin
      catch of light just outside it, the same all the way round */
@@ -778,11 +774,8 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-lo: #48423b;
   --key-side: #2c2823;
   --gasket: #141210;
-  --drum-ink: #cbbfae;
-  --drum-cut: rgba(0, 0, 0, 0.75);
-  --drum-catch: rgba(255, 236, 210, 0.16);
-  --lamp: #ffb75e;
-  --lamp-glow: rgba(255, 168, 70, 0.75);
+  --lamp: #9fd29a;
+  --lamp-glow: rgba(130, 200, 122, 0.6);
   --lamp-rim: rgba(0, 0, 0, 0.35);
   --glass-edge: rgba(0, 0, 0, 0.7);
   --lip-light: rgba(255, 236, 210, 0.12);
@@ -1123,16 +1116,9 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   pointer-events: none;
 }
 .drum-row { white-space: nowrap; letter-spacing: 0.08em; line-height: 1; }
-.drum-now { font-size: 0.875rem; font-weight: 600; color: var(--drum-ink); }
+.drum-now { font-size: 0.8125rem; font-weight: 400; color: var(--ink3); } /* the range keys' grey */
 /* the neighbours curve away round the drum */
-.drum-prev, .drum-next { font-size: 0.625rem; color: var(--drum-ink); opacity: 0.4; transform: scaleY(0.55); }
-/* the names are engraved into the drum: cut in, so shade sits along the top of
-   each letter and light catches its lower edge */
-.drum-row {
-  text-shadow:
-    0 -1px 0 var(--drum-cut),
-    0 1px 0 var(--drum-catch);
-}
+.drum-prev, .drum-next { font-size: 0.625rem; color: var(--ink3); opacity: 0.4; transform: scaleY(0.55); }
 .drum-prev { align-self: end; }
 .drum-next { align-self: start; }
 .hw-drum-face.is-rolling-up { animation: drum-up 0.16s cubic-bezier(0.3, 0.7, 0.3, 1); }
@@ -1141,7 +1127,7 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
 @keyframes drum-down { from { transform: translateY(-0.75rem); opacity: 0.4; } }
 @media (max-width: 760px) {
   .hw-drum { width: 6.25rem; height: 2.75rem; }
-  .drum-now { font-size: 0.8125rem; }
+  .drum-now { font-size: 0.75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hw-drum-face.is-rolling-up, .hw-drum-face.is-rolling-down { animation: none; }
