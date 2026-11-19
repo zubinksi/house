@@ -756,6 +756,10 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-lo: #e2dacb;
   --key-side: #bdb29d;
   --gasket: #6b6152;
+  /* engraving on the drum: ink a little lifted, shade above, light below */
+  --drum-ink: #5a4c3d;
+  --drum-cut: rgba(40, 28, 14, 0.45);
+  --drum-catch: rgba(255, 255, 255, 0.85);
   /* the bezel's status light: warm white by day, amber at dusk */
   --lamp: #fff6e4;
   --lamp-glow: rgba(255, 236, 196, 0.95);
@@ -774,6 +778,9 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   --key-lo: #48423b;
   --key-side: #2c2823;
   --gasket: #141210;
+  --drum-ink: #cbbfae;
+  --drum-cut: rgba(0, 0, 0, 0.75);
+  --drum-catch: rgba(255, 236, 210, 0.16);
   --lamp: #ffb75e;
   --lamp-glow: rgba(255, 168, 70, 0.75);
   --lamp-rim: rgba(0, 0, 0, 0.35);
@@ -1116,9 +1123,16 @@ tbody tr { box-shadow: 0 1px 0 var(--catch); }
   pointer-events: none;
 }
 .drum-row { white-space: nowrap; letter-spacing: 0.08em; line-height: 1; }
-.drum-now { font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.drum-now { font-size: 0.875rem; font-weight: 600; color: var(--drum-ink); }
 /* the neighbours curve away round the drum */
-.drum-prev, .drum-next { font-size: 0.625rem; color: var(--ink3); opacity: 0.45; transform: scaleY(0.55); }
+.drum-prev, .drum-next { font-size: 0.625rem; color: var(--drum-ink); opacity: 0.4; transform: scaleY(0.55); }
+/* the names are engraved into the drum: cut in, so shade sits along the top of
+   each letter and light catches its lower edge */
+.drum-row {
+  text-shadow:
+    0 -1px 0 var(--drum-cut),
+    0 1px 0 var(--drum-catch);
+}
 .drum-prev { align-self: end; }
 .drum-next { align-self: start; }
 .hw-drum-face.is-rolling-up { animation: drum-up 0.16s cubic-bezier(0.3, 0.7, 0.3, 1); }

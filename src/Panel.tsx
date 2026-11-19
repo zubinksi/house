@@ -48,6 +48,34 @@ export interface DrumProps {
 
 const SETTLE_MS = 320;
 
+/*
+ * A detent's click, felt rather than heard. Android takes a short vibration.
+ * iPhones give websites no vibration; the one opening on iOS 18+ is the light
+ * tap Safari plays when a switch control toggles, so a hidden one is flipped.
+ */
+let haptic: HTMLLabelElement | null = null;
+function tick() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(6);
+    return;
+  }
+  if (!haptic) {
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    input.id = 'drum-haptic';
+    const label = document.createElement('label');
+    label.htmlFor = 'drum-haptic';
+    for (const el of [input, label]) {
+      el.setAttribute('aria-hidden', 'true');
+      el.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+      document.body.appendChild(el);
+    }
+    haptic = label;
+  }
+  haptic.click();
+}
+
 /**
  * A printed drum behind a window, rolled with a thumb: the entry in the window
  * is sharp, the ones above and below curve away. Each detent steps one entry;
@@ -72,6 +100,7 @@ function Drum({ items, current, label, onPick }: DrumProps) {
     const to = Math.max(0, Math.min(items.length - 1, from + dir));
     if (to === from && i >= 0) return;
     const id = items[to];
+    tick();
     setShown(id);
     setRoll(dir > 0 ? 'up' : 'down');
     clearTimeout(settle.current);
@@ -97,7 +126,7 @@ function Drum({ items, current, label, onPick }: DrumProps) {
       aria-valuenow={Math.max(0, i)}
       onWheel={(e) => {
         acc.current += e.deltaY;
-        if (Math.abs(acc.current) >= 30) {
+        if (Math.abs(acc.current) >= 45) {
           step(acc.current > 0 ? 1 : -1);
           acc.current = 0;
         }
@@ -109,7 +138,7 @@ function Drum({ items, current, label, onPick }: DrumProps) {
       onPointerMove={(e) => {
         if (drag.current == null) return;
         const dy = e.clientY - drag.current;
-        if (Math.abs(dy) >= 16) {
+        if (Math.abs(dy) >= 24) {
           // roll it like a wheel: pushing up brings the next entry into the window
           step(dy < 0 ? 1 : -1);
           drag.current = e.clientY;
