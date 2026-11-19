@@ -8,6 +8,7 @@
  */
 import iris from './assets/iris-white.png';
 import { LightSwitch } from './Mast';
+import { useLiveStatus } from './hl';
 
 export function Panel({ keys, active, onKey, moon, onTurn, dim = false }: {
   keys: readonly string[];
@@ -40,10 +41,21 @@ export function Panel({ keys, active, onKey, moon, onTurn, dim = false }: {
 }
 
 /** Phones: the bezel above the screen, with the iris at its centre. */
+/**
+ * The bezel above the screen: the iris at the centre and, at the top left, a
+ * status light beside a small sensor window, as an intercom has. The light
+ * breathes while prices stream, fainter while reconnecting, dark when offline.
+ */
 export function PanelTop() {
+  const status = useLiveStatus();
+  const words = { live: 'Live: prices streaming', connecting: 'Connecting', down: 'Offline' } as const;
   return (
-    <div className="panel-top" aria-hidden>
-      <span className="panel-mark" style={{ maskImage: `url(${iris})`, WebkitMaskImage: `url(${iris})` }} />
+    <div className="panel-top">
+      <span className="panel-status" role="status" aria-label={words[status]} title={words[status]}>
+        <span className="panel-sensor" aria-hidden />
+        <span className="panel-lamp" data-state={status} aria-hidden />
+      </span>
+      <span className="panel-mark" style={{ maskImage: `url(${iris})`, WebkitMaskImage: `url(${iris})` }} aria-hidden />
     </div>
   );
 }

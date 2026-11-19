@@ -179,12 +179,17 @@ export async function fetchSpotPrices(): Promise<Map<string, number>> {
 let mids: Record<string, number> = {};
 let socket: WebSocket | null = null;
 let retry = 1000;
+// prices stream about every second; a silence this long means the line has
+// dropped without saying so, and the socket is reopened
+const STALE_MS = 10000;
+let stale: ReturnType<typeof setTimeout> | undefined;
 let status: 'connecting' | 'live' | 'down' = 'connecting';
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 function connect() {
   status = 'connecting';
+  emit();
   try {
     socket = new WebSocket(WS);
   } catch {
@@ -204,16 +209,28 @@ function connect() {
     const next: Record<string, number> = { ...mids };
     for (const [k, v] of Object.entries(msg.data.mids as Record<string, string>)) next[k] = +v;
     mids = next;
-    status = 'live';
+    if (status !== 'live') {
+      status = 'live';
+    }
     emit();
+    clearTimeout(stale);
+    stale = setTimeout(() => {
+      status = 'connecting';
+      emit();
+      socket?.close();
+    }, STALE_MS);
   };
   socket.onclose = () => {
+    clearTimeout(stale);
     status = 'down';
     emit();
     socket = null;
     if (listeners.size) setTimeout(connect, (retry = Math.min(retry * 2, 30000)));
   };
 }
+
+// the browser knows first when the network goes: drop the line at once
+if (typeof window !== 'undefined') window.addEventListener('offline', () => socket?.close());
 
 function subscribe(fn: () => void) {
   listeners.add(fn);
@@ -228,6 +245,10 @@ export function useMids() {
   return useSyncExternalStore(subscribe, () => mids);
 }
 export const midsStatus = () => status;
+/** The live connection's state: connecting, live (prices streaming) or down. */
+export function useLiveStatus() {
+  return useSyncExternalStore(subscribe, () => status);
+}
 
 /* ── Formats ── */
 export const DASH = '—';

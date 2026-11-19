@@ -112,7 +112,6 @@ export function Markets({ coin, onCoin, markets, error, palette, onMenu, range, 
         <div className="m-id">
           <div className="m-ticker-row">
           <h1 className="m-ticker" id="m-coin">
-            <span className="live-dot" data-live={live != null || undefined} aria-hidden />
             <b>{ticker(coin)}</b>
             {assetName(coin) && <span className="m-name">{assetName(coin)}</span>}
           </h1>
