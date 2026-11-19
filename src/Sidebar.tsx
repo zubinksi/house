@@ -9,6 +9,7 @@ import type { Page } from './App';
 import { type Market, price, pct, tone, shortAddr, useMids } from './hl';
 import { filtersFor, type Filter, inFilter, ticker, assetName, keywords } from './catalog';
 import { toggleStar, useStars } from './stars';
+import { setOrder } from './order';
 import { AddressForm } from './Address';
 
 export function Sidebar({ page, markets, coin, onCoin, address, onAddress, open, searchSignal }: {
@@ -183,6 +184,11 @@ function MarketList({ markets, coin, onCoin, query, searching, open }: {
       return b.m.vol - a.m.vol;
     });
 
+  // share the list's order with the panel's drum (not while a search narrows it)
+  const names = shown.map((r) => r.m.name);
+  useEffect(() => {
+    if (!q) setOrder('markets', names);
+  });
   const listRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
     listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
@@ -272,6 +278,7 @@ function MarketList({ markets, coin, onCoin, query, searching, open }: {
 
 function AddressList({ address, onAddress }: { address: string; onAddress: (a: string) => void }) {
   const stars = useStars('addresses');
+  useEffect(() => setOrder('addresses', stars), [stars]);
   if (!stars.length) return <p className="side-empty">Star an address to keep it here.</p>;
   return (
     <ul className="side-list">

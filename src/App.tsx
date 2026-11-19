@@ -10,6 +10,9 @@ import { Sidebar } from './Sidebar';
 import { Markets, RANGES, type Range } from './Markets';
 import { Address, PERIODS, type Period } from './Address';
 import { Panel, PanelTop } from './Panel';
+import { useOrder } from './order';
+import { ticker } from './catalog';
+import { shortAddr } from './hl';
 import { useMarkets } from './hl';
 // plain-JS engines carried over from the first version
 import { light } from './weather/light.js';
@@ -126,6 +129,8 @@ export function App() {
   }, [page, setMode, turn, toggleSound, closeMenu]);
 
   const palette = PALETTES[mode];
+  const marketOrder = useOrder('markets');
+  const addressOrder = useOrder('addresses');
 
   // the chart's span, set from the screen or the panel's keys
   const [range, setRangeState] = useState<Range>(() => {
@@ -148,7 +153,7 @@ export function App() {
       />
       {/* the wall panel: the slab is its screen, its hardware beneath (desktop) */}
       <div className="panel">
-      <PanelTop />
+      <PanelTop moon={mode === 'moon'} onTurn={turn} />
       {/* the screen, set into the panel */}
       <div className="screen">
       <main className={`slab${menu ? ' is-menu' : ''}${returned ? ' has-returned' : ''}`}>
@@ -185,8 +190,11 @@ export function App() {
           else setPeriod(k as Period);
         }}
         dim={menu}
-        moon={mode === 'moon'}
-        onTurn={turn}
+        drum={
+          page === 'markets'
+            ? { items: marketOrder, current: coin, label: ticker, onPick: setCoin }
+            : { items: addressOrder, current: address, label: shortAddr, onPick: setAddress }
+        }
       />
       </div>
     </>
